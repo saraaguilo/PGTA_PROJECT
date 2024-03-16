@@ -163,7 +163,7 @@ namespace OurClasses
         public string SIMDecoding(byte[] data)
         {
 
-        int sim = (data[0] >> 4) & 0b00000001; //cuarto bit del array de data
+        int sim = (data[0] >> 4) & 0b00000001; //cuarto bit del array de data 00010000
         Dictionary<int, string> simDescriptions = new Dictionary<int, string>()
     {
         { 0, "Actual target report" },
@@ -263,9 +263,84 @@ namespace OurClasses
 
 
 
+        public double PolarRhoDecoding(byte[] data)
+        {
+            byte[] rhovec = new byte[] { data[0], data[1] }; //se cogen 16 bits
+            double resolutionLSB = 1.0 / Math.Pow(2, 8);
+            this.rho = ByteToDoubleDecoding(rhovec, resolutionLSB);
+            return this.rho;
+        }
+
+        public double PolarThetaDecoding(byte[] data)
+        {
+            byte[] thetavec = new byte[] { data[2], data[3] }; //se cogen 16 bits
+            double resolutionLSB = 360.0 / Math.Pow(2, 16);
+            this.theta = ByteToDoubleDecoding(thetavec, resolutionLSB);
+            return this.rho;
+        }
+
+        //Flight level in binary representation
+        public string V_FLDecoding(byte[] data)
+        {
+            int V_FL = (data[0] >> 7) & 0b00000001;
+            Dictionary<int, string> V_FLDescriptions = new Dictionary<int, string>()
+    {
+        { 0, "Code validated" },
+        { 1, "Code not validated" }
+    };
+
+            return V_FLDescriptions.ContainsKey(V_FL) ? V_FLDescriptions[V_FL] : "";
+          }
+
+        
+        public string V_FLDecoding(byte[] data)
+        {
+        int G_FL = (data[0] >> 6) & 0b00000001;
+        Dictionary<int, string> G_FLDescriptions = new Dictionary<int, string>()
+        {
+            { 0, " Default" },
+            { 1, " Garbled code" }
+        };
+
+            return G_FLDescriptions.ContainsKey(G_FL) ? G_FLDescriptions[G_FL] : "";
+        }
+
+        public double FLDecoding(byte[] data)
+        {
+            byte firstByte = data[0];
+            byte secondByte = data[1];
+
+            int FLBits = (firstByte & 0b00111111) << 8 | secondByte;
+            bool isNegative = (firstByte & 0b00100000) != 0;
+            double resolutionLSB = 1.0 / 4.0; // Resolución para FL
+
+            if (isNegative)
+            {
+                FLBits = (~FLBits + 1) & 0x3FFF;
+            }
+
+            double flightLevel = FLBits * resolutionLSB;
+            this.FL = flightLevel;
+            return this.FL;
+
+        }
+
+
+
+
+    
 
 
 
 
 
-    }
+
+
+
+
+
+
+
+
+
+ }
