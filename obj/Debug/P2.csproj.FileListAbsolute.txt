@@ -1,0 +1,16 @@
+C:\Users\polro\Desktop\PGTA\.vs\P2\bin\Debug\P2.exe.config
+C:\Users\polro\Desktop\PGTA\.vs\P2\bin\Debug\P2.exe
+C:\Users\polro\Desktop\PGTA\.vs\P2\bin\Debug\P2.pdb
+C:\Users\polro\Desktop\PGTA\.vs\P2\obj\Debug\P2.csprojAssemblyReference.cache
+C:\Users\polro\Desktop\PGTA\.vs\P2\obj\Debug\P2.Properties.Resources.resources
+C:\Users\polro\Desktop\PGTA\.vs\P2\obj\Debug\P2.csproj.GenerateResource.cache
+C:\Users\polro\Desktop\PGTA\.vs\P2\obj\Debug\P2.csproj.CoreCompileInputs.cache
+C:\Users\polro\Desktop\PGTA\.vs\P2\obj\Debug\P2.exe
+C:\Users\polro\Desktop\PGTA\.vs\P2\obj\Debug\P2.pdb
+C:\Users\polro\Desktop\PGTA\.vs\P2\bin\Debug\AjaxMin.dll
+C:\Users\polro\Desktop\PGTA\.vs\P2\bin\Debug\GMap.NET.Core.dll
+C:\Users\polro\Desktop\PGTA\.vs\P2\bin\Debug\Gmap.net.dll
+C:\Users\polro\Desktop\PGTA\.vs\P2\bin\Debug\GMap.NET.WindowsForms.dll
+C:\Users\polro\Desktop\PGTA\.vs\P2\bin\Debug\GMap.NET.WindowsPresentation.dll
+C:\Users\polro\Desktop\PGTA\.vs\P2\bin\Debug\Gmap.net.pdb
+C:\Users\polro\Desktop\PGTA\.vs\P2\obj\Debug\P2.csproj.CopyComplete
