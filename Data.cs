@@ -65,12 +65,12 @@ namespace OurClasses
         string? ME { get; set; }
         string? MI { get; set; }
         string? FOE_FRI { get; set; }
-        //string? ADSB_EP { get; set; }
-        //string? ADSB_VAL { get; set; }
-        //string? SCN_EP { get; set; }
-        //string? SCN_VAL { get; set; }
-        //string? PAI_EP { get; set; }
-        //string? PAI_VAL { get; set; }
+        string ADSB_EP { get; set; }
+        string ADSB_VAL { get; set; }
+        string SCN_EP { get; set; }
+        string SCN_VAL { get; set; }
+        string PAI_EP { get; set; }
+        string PAI_VAL { get; set; }
         //string? SPARE { get; set; }
     }
 

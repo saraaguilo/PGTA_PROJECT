@@ -20,18 +20,18 @@ namespace OurClasses
         string RDP { get; set; }
         string SPI { get; set; }
         string RAB { get; set; }
-        string? TST { get; set; }
-        string? ERR { get; set; }
-        string? XPP { get; set; }
-        string? ME { get; set; }
-        string? MI { get; set; }
-        string? FOE_FRI { get; set; }
-        //string? ADSB_EP { get; set; }
-        //string? ADSB_VAL { get; set; }
-        //string? SCN_EP { get; set; }
-        //string? SCN_VAL { get; set; }
-        //string? PAI_EP { get; set; }
-        //string? PAI_VAL { get; set; }
+        string TST { get; set; }
+        string ERR { get; set; }
+        string XPP { get; set; }
+        string ME { get; set; }
+        string MI { get; set; }
+        string FOE_FRI { get; set; }
+        string ADSB_EP { get; set; }
+        string ADSB_VAL { get; set; }
+        string SCN_EP { get; set; }
+        string SCN_VAL { get; set; }
+        string PAI_EP { get; set; }
+        string PAI_VAL { get; set; }
         //string? SPARE { get; set; }
 
         public string V { get; set; }
@@ -39,24 +39,31 @@ namespace OurClasses
         public string L { get; set; }
         public string mode3A { get; set; }
 
-        public string V { get; set; }
-        public string G { get; set; }
+        public string V2 { get; set; }
+        public string G2 { get; set; }
         public double FL { get; set; }
 
-        public double SRL { get; set; }
-        public double SSR { get; set; }
-        public double SAM { get; set; }
-        public double PRL { get; set; }
-        public double PAM { get; set; }
-        public double RPD { get; set; }
-        public double APD { get; set; }
+        public string SRL { get; set; }
+        public string SSR { get; set; }
+        public string SAM { get; set; }
+        public string PRL { get; set; }
+        public string PAM { get; set; }
+        public string RPD { get; set; }
+        public string APD { get; set; }
+        public double SRL2 { get; set; };
+        public int SRR2 { get; set; };
+        public double SAM2 { get; set; };
+        public double PRL2 { get; set; };
+        public double PAM2 { get; set; };
+        public double RPD2 { get; set; };
+        public double APD2 { get; set; };
 
-        public string fullmodeS { get; set; };//mirar-ho bé
+        public List<int> fullModeS { get; set; };//mirar-ho bé
         public BDSCode4 modeBDS4 { get; set; }
         public BDSCode5 modeBDS5 { get; set; }
         public BDSCode6 modeBDS6 { get; set; }
 
-        public double MCPstatus { get; set; }
+        public int MCPstatus { get; set; }
         public double MCPalt { get; set; }
         public double FMstatus { get; set; }
         public double FMalt { get; set; }
@@ -185,7 +192,7 @@ namespace OurClasses
         return rdpDescriptions.ContainsKey(rdp) ? rdpDescriptions[rdp] : "";
         }
         
-        public string SIPDecoding(byte[] data)
+        public string SPIDecoding(byte[] data)
         {
        
         int spi = (data[0] >> 2) & 0b00000001;
@@ -254,7 +261,353 @@ namespace OurClasses
             return this.FOE_FRI;
 
         }
-        //ADSB????
+        public string ADSB_EPDecoding(byte[] data)
+        {
+
+            int adsb_ep = (data[0] >> 7) & 0b00000001;
+            Dictionary<int, string> adsb_epDescriptions = new Dictionary<int, string>()
+    {
+        { 0, "ADSB not populated" },
+        { 1, "ADSB populated" }
+    };
+            return adsb_epDescriptions.ContainsKey(adsb_ep) ? adsb_epDescriptions[adsb_ep] : "";
+
+        }
+        public string ADSB_VALDecoding(byte[] data)
+        {
+
+            int adsb_val = (data[0] >> 6) & 0b00000001;
+            Dictionary<int, string> adsb_valDescriptions = new Dictionary<int, string>()
+    {
+        { 0, "not available" },
+        { 1, "available" }
+    };
+            return adsb_valDescriptions.ContainsKey(adsb_val) ? adsb_valDescriptions[adsb_val] : "";
+
+        }
+        public string SCN_EPDecoding(byte[] data)
+        {
+
+            int scn_ep = (data[0] >> 5) & 0b00000001;
+            Dictionary<int, string> scn_epDescriptions = new Dictionary<int, string>()
+    {
+        { 0, "SCN not populated" },
+        { 1, "SCN populated" }
+    };
+            return scn_epDescriptions.ContainsKey(scn_ep) ? scn_epDescriptions[scn_ep] : "";
+
+        }
+        public string SCN_VALDecoding(byte[] data)
+        {
+
+            int scn_val = (data[0] >> 4) & 0b00000001;
+            Dictionary<int, string> scn_valDescriptions = new Dictionary<int, string>()
+    {
+        { 0, "not available" },
+        { 1, "available" }
+    };
+            return scn_valDescriptions.ContainsKey(scn_val) ? scn_valDescriptions[scn_val] : "";
+
+        }
+        public string PAI_EPDecoding(byte[] data)
+        {
+
+            int pai_ep = (data[0] >> 3) & 0b00000001;
+            Dictionary<int, string> pai_epDescriptions = new Dictionary<int, string>()
+    {
+        { 0, "PAI not populated" },
+        { 1, "PAI populated" }
+    };
+            return pai_epDescriptions.ContainsKey(pai_ep) ? pai_epDescriptions[pai_ep] : "";
+
+        }
+        public string PAI_VALDecoding(byte[] data)
+        {
+
+            int pai_val = (data[0] >> 2) & 0b00000001;
+            Dictionary<int, string> pai_valDescriptions = new Dictionary<int, string>()
+    {
+        { 0, "not available" },
+        { 1, "available" }
+    };
+            return pai_valDescriptions.ContainsKey(pai_val) ? pai_valDescriptions[pai_val] : "";
+
+        }
+
+        //ahora vamos a decodificara los parámetros de Mode-3A, en representación octal
+
+        public string VDecoding(byte[] data)
+        {
+            
+            int[] v = (data[0] >> 7) & 0b00000001;
+            Dictionary<int, string> vDescriptions = new Dictionary<int, string>()
+    {
+        { 0, "Code validated" },
+        { 1, "Code not validated" }
+    };
+            return vDescriptions.ContainsKey(v) ? vDescriptions[v] : "";
+
+        }
+        public string GDecoding(byte[] data)
+        {
+
+            int[] g = (data[0] >> 6) & 0b00000001;
+            Dictionary<int, string> gDescriptions = new Dictionary<int, string>()
+    {
+        { 0, "Default" },
+        { 1, "Garbled code" }
+    };
+            return gDescriptions.ContainsKey(g) ? gDescriptions[g] : "";
+
+        }
+        public string LDecoding(byte[] data)
+        {
+
+            int[] l = (data[0] >> 5) & 0b00000001;
+            Dictionary<int, string> lDescriptions = new Dictionary<int, string>()
+    {
+        { 0, "Mode-3/A code derived from the reply of the transponder" },
+        { 1, "Mode-3/A code not extracted during the last scan" }
+    };
+            return lDescriptions.ContainsKey(l) ? lDescriptions[l] : "";
+
+        }
+        public string mode3ADecoding(byte[] dataItem)
+        {
+            // Aquí extraemos los bits A, B, C y D del modo 3A
+            int A = (dataItem[0] >> 1) & 0b00000111;
+            int B = ((dataItem[0] & 0b00000001) << 2) | ((dataItem[1] >> 6) & 0b00000011);
+            int C = (dataItem[1] >> 3) & 0b00000111;
+            int D = dataItem[1] & 0b00000111;
+            int mode3A = A * 1000 + B * 100 + C * 10 + D;
+            // Queremos que el resultado tenga al menos 3 dígitos
+            string mode3AFormatted = mode3A.ToString("D3");
+            return mode3AFormatted;
+        }
+        //Ahora vamos a decodificar el flight level (binary representation)
+        public string V2Decoding(byte[] data)
+        {
+            int V2 = (data[0] >> 7) & 0b00000001;
+            Dictionary<int, string> V2Descriptions = new Dictionary<int, string>()
+    {
+        { 0, "Code validated" },
+        { 1, "Code not validated" }
+    };
+
+            return V2Descriptions.ContainsKey(V2) ? V2Descriptions[V2] : "";
+        }
+        public string G2Decoding(byte[] data)
+        {
+            int G2 = (data[0] >> 6) & 0b00000001;
+            Dictionary<int, string> G2Descriptions = new Dictionary<int, string>()
+        {
+            { 0, " Default" },
+            { 1, " Garbled code" }
+        };
+
+            return G2Descriptions.ContainsKey(G2) ? G2Descriptions[G2] : "";
+        }
+        public double FLDecoding(byte[] data)
+        {
+            byte firstByte = data[0];
+            byte secondByte = data[1];
+
+            int FLBits = (firstByte & 0b00111111) << 8 | secondByte;
+            bool isNegative = (firstByte & 0b00100000) != 0;
+            double resolutionLSB = 1.0 / 4.0; // Resolución de FL
+
+            if (isNegative)
+            {
+                FLBits = (~FLBits + 1) & 0x3FFF;
+            }
+
+            double flightLevel = FLBits * resolutionLSB;
+            this.FL = flightLevel;
+            return this.FL;
+
+        }
+        //Ahora se decodificará Radar Plot Characteristics
+        public string SRLDecoding(byte[] data)
+        {
+            int srl = (data[0] >> 7) & 0b00000001;
+            Dictionary<int, string> srlDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "Absence of Subfield #1: SSR plot runlength" },
+            { 1, "Presence of Subfield #1: SSR plot runlength" }
+        };
+
+            return srlDescriptions.ContainsKey(srl) ? srlDescriptions[srl] : "";
+        }
+        public double SRL2Decoding(byte[] data)
+        {
+            double resolution = 360.0 / 213.0; //en dgs
+            this.SRL2 = ByteToDoubleDecoding(data, resolution);
+            return this.SRL2;
+        }
+        public string SSRDecoding(byte[] data)
+        {
+            int ssr = (data[0] >> 6) & 0b00000001;
+            Dictionary<int, string> ssrDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "Absence of Subfield #2: Number of received replies for M(SSR)" },
+            { 1, "Presence of Subfield #2: Number of received replies for M(SSR)\" " }
+        };
+
+            return ssrDescriptions.ContainsKey(ssr) ? ssrDescriptions[ssr] : "";
+        }
+        public int SSR2Decoding(byte[] data)
+        {
+            double resolution = 1; //no tiene unidades
+            this.SSR2 = ByteToDoubleDecoding(data, resolution);
+            return this.SSR2;
+        }
+        public string SAMDecoding(byte[] data)
+        {
+            int sam = (data[0] >> 5) & 0b00000001;
+            Dictionary<int, string> samDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "Absence of Subfield #3: Amplitude of received replies for M(SSR)" },
+            { 1, "Presence of Subfield #3: Amplitude of received replies for M(SSR)" }
+        };
+            return samDescriptions.ContainsKey(sam) ? samDescriptions[sam] : "";
+        }
+        public double SAM2Decoding(byte[] data)
+        {
+            double resolution = 1; // dBm
+            double bytesValue = 0;
+            for (int i = 0; i < data.Length; i++)
+            {
+                bytesValue *= 256; 
+                bytesValue += data[i];
+            }
+            if ((data[0] & 128) != 0)
+            {
+                // Conversión de dos complementos para valores negativos
+                bytesValue = (ushort)~(bytesValue - 1);
+                bytesValue *= -1;
+            }
+            this.SAM2 = bytesValue * resolution;
+            return this.SAM2;
+        }
+        public string PRLDecoding(byte[] data)
+        {
+            int prl = (data[0] >> 4) & 0b00000001;
+            Dictionary<int, string> prlDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "Absence of Subfield #4: PSR plot runlength" },
+            { 1, "Presence of Subfield #4: PSR plot runlength" }
+        };
+            return prlDescriptions.ContainsKey(prl) ? prlDescriptions[prl] : "";
+        }
+        public double PRL2Decoding(byte[] data)
+        {
+            double resolution = 360.0 / 213.0; //en dgs
+            this.PRL2 = ByteToDoubleDecoding(data, resolution);
+            return this.PRL2;
+        }
+        public string PAMDecoding(byte[] data)
+        {
+            int pam = (data[0] >> 3) & 0b00000001;
+            Dictionary<int, string> pamDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "Absence of Subfield #5: PSR amplitude" },
+            { 1, "Presence of Subfield #5: PSR amplitude" }
+        };
+            return pamDescriptions.ContainsKey(pam) ? pamDescriptions[pam] : "";
+        }
+        public double PAM2Decoding(byte[] data)
+        {
+            double resolution = 1; // dBm
+            double bytesValue = 0;
+            for (int i = 0; i < data.Length; i++)
+            {
+                bytesValue *= 256;
+                bytesValue += data[i];
+            }
+            if ((data[0] & 128) != 0)
+            {
+                // Hacemos la conversión de dos complementos para valores negativos
+                bytesValue = (ushort)~(bytesValue - 1);
+                bytesValue *= -1;
+            }
+            this.PAM2 = bytesValue * resolution;
+            return this.PAM2;
+        }
+        public string RPDDecoding(byte[] data)
+        {
+            int rpd = (data[0] >> 2) & 0b00000001;
+            Dictionary<int, string> rpdDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "Absence of Subfield #6: Difference in Range between PSR and SSR plot" },
+            { 1, "Presence of Subfield #6: Difference in Range between PSR and SSR plot" }
+        };
+            return rpdDescriptions.ContainsKey(rpd) ? rpdDescriptions[rpd] : "";
+        }
+        public double RPD2Decoding(byte[] data)
+        {
+            double resolution = 1 / 256; // NM
+            double bytesValue = 0;
+            for (int i = 0; i < data.Length; i++)
+            {
+                bytesValue *= 256;
+                bytesValue += data[i];
+            }
+            if ((data[0] & 128) != 0)
+            {
+                // Hacemos la conversión de dos complementos para valores negativos
+                bytesValue = (ushort)~(bytesValue - 1);
+                bytesValue *= -1;
+            }
+            this.RPD2 = bytesValue * resolution;
+            return this.RPD2;
+        }
+        public string APDDecoding(byte[] data)
+        {
+            int apd = (data[0] >> 1) & 0b00000001;
+            Dictionary<int, string> apdDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "Absence of Subfield #7: Difference in Azimuth between PSR and SSR plot" },
+            { 1, "Presence of Subfield #7: Difference in Azimuth between PSR and SSR plot" }
+        };
+            return apdDescriptions.ContainsKey(apd) ? apdDescriptions[apd] : "";
+        }
+        public double APD2Decoding(byte[] data)
+        {
+            double resolution = 360.0 / Math.Pow(2, 14); // dgs
+            double bytesValue = 0;
+            for (int i = 0; i < data.Length; i++)
+            {
+                bytesValue *= 256;
+                bytesValue += data[i];
+            }
+            if ((data[0] & 128) != 0)
+            {
+                // Hacemos la conversión de dos complementos para valores negativos
+                bytesValue = (ushort)~(bytesValue - 1);
+                bytesValue *= -1;
+            }
+            this.APD2 = bytesValue * resolution;
+            return this.APD2;
+        }
+        public int[] fullModeSDecoding(byte[] data)
+        {
+            int bdsByte = data[7];
+
+            int bds1 = (bdsByte & 0xF0) >> 4; // Entrada
+            int bds2 = bdsByte & 0x0F;        // Salida
+
+            return new int[] { bds1, bds2 };
+        }
+        public int MCPStatusDecoding(byte[] data)
+        {
+
+        }
+
+
+
+
+
+
 
 
 
@@ -279,51 +632,7 @@ namespace OurClasses
             return this.rho;
         }
 
-        //Flight level in binary representation
-        public string V_FLDecoding(byte[] data)
-        {
-            int V_FL = (data[0] >> 7) & 0b00000001;
-            Dictionary<int, string> V_FLDescriptions = new Dictionary<int, string>()
-    {
-        { 0, "Code validated" },
-        { 1, "Code not validated" }
-    };
-
-            return V_FLDescriptions.ContainsKey(V_FL) ? V_FLDescriptions[V_FL] : "";
-          }
-
         
-        public string V_FLDecoding(byte[] data)
-        {
-        int G_FL = (data[0] >> 6) & 0b00000001;
-        Dictionary<int, string> G_FLDescriptions = new Dictionary<int, string>()
-        {
-            { 0, " Default" },
-            { 1, " Garbled code" }
-        };
-
-            return G_FLDescriptions.ContainsKey(G_FL) ? G_FLDescriptions[G_FL] : "";
-        }
-
-        public double FLDecoding(byte[] data)
-        {
-            byte firstByte = data[0];
-            byte secondByte = data[1];
-
-            int FLBits = (firstByte & 0b00111111) << 8 | secondByte;
-            bool isNegative = (firstByte & 0b00100000) != 0;
-            double resolutionLSB = 1.0 / 4.0; // Resolución para FL
-
-            if (isNegative)
-            {
-                FLBits = (~FLBits + 1) & 0x3FFF;
-            }
-
-            double flightLevel = FLBits * resolutionLSB;
-            this.FL = flightLevel;
-            return this.FL;
-
-        }
 
 
 
