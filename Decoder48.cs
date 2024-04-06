@@ -65,20 +65,20 @@ namespace OurClasses
 
         public int MCPstatus { get; set; }
         public double MCPalt { get; set; }
-        public double FMstatus { get; set; }
+        public int FMstatus { get; set; }
         public double FMalt { get; set; }
-        public double BPSstatus { get; set; }
-        public double BPSpres { get; set; }
-        public double modeStat { get; set; }
-        public double VNAV { get; set; }
-        public double ALThold { get; set; }
-        public double App { get; set; } //approach
-        public double targetalt_status { get; set; }
-        public double targetalt_source { get; set; }
+        public int BPstatus { get; set; }
+        public double BPpres { get; set; }
+        public int modeStat { get; set; }
+        public int VNAV { get; set; }
+        public int ALThold { get; set; }
+        public int App { get; set; } //approach
+        public int targetalt_status { get; set; }
+        public string targetalt_source { get; set; }
 
-        public double RAstatus { get; set; }
+        public int RAstatus { get; set; }
         public double RA { get; set; } //roll angle
-        public double TTAstatus { get; set; }
+        public int TTAstatus { get; set; }
         public double TTA { get; set; } //true track angle
         public double GSstatus { get; set; }
         public double GS { get; set; } //ground speed
@@ -600,8 +600,165 @@ namespace OurClasses
         }
         public int MCPStatusDecoding(byte[] data)
         {
+            int mcpstatus = (data[0] >> 7) & 0b00000001;
+            this.MCPstatus = mcpstatus;
+            return this.MCPstatus;
+        }
+        public double MCPaltDecoding(byte[] data)
+        {
+            byte mcpalt1 = (byte)((data[0] >> 0) & 0b01111111);
+            byte mcpalt2 = (byte)((data[1] >> 3) & 0b00011111);
+
+            int combinedValue = (mcpalt1 << 5) | mcpalt2;
+
+            double resolution = 16; // Resolución en ft
+            double mcpAltitude = combinedValue * resolution;
+            this.MCPalt = mcpAltitude;
+            return mcpAltitude;
+        }
+        public int FMstatusDecoding(byte[] data)
+        {
+            int fmstatus = (data[0] >> 2) & 0b00000001;
+            this.FMstatus = fmstatus;
+            return this.FMstatus;
 
         }
+        public double FMaltDecoding(byte[] data)
+        {
+            byte fmalt1 = (byte)((data[0] >> 0) & 0b00000011);
+            byte fmalt2 = (byte)((data[1] >> 0) & 0b11111111);
+            byte fmalt3 = (byte)((data[2] >> 6) & 0b00000011);
+
+            int combinedValue = (fmalt1 << 16) | (fmalt2 << 6) | fmalt3;
+
+            double resolution = 16; // Resolución en ft
+            double fmAltitude = combinedValue * resolution;
+            this.FMalt = fmAltitude;
+            return fmAltitude;
+
+        }
+        public int BPstatusDecoding(byte[] data)
+        {
+            int bpstatus = (data[0] >> 5) & 0b00000001;
+            this.BPstatus = bpstatus;
+            return this.BPstatus;
+        }
+        public double BPpresDecoding(byte[] data)
+        {
+            byte bppres1 = (byte)((data[0] >> 0) & 0b00011111);
+            byte bppres2 = (byte)((data[1] >> 1) & 0b01111111);
+
+            int combinedValue = (bppres1 << 7) | bppres2;
+
+            double resolution = 0.1; // Resolución en mb
+            double bppres = combinedValue * resolution;
+            this.BPpres = bppres + 800;
+            return this.BPpres;
+
+        }
+        public int modeStatDecoding(byte[] data)
+        {
+            int modeStat = (data[0] >> 0) & 0b00000001;
+            this.modeStat = modeStat;
+            return this.modestatus;
+        }
+        public int VNAVDecoding(byte[] data)
+        {
+            int vnav = (data[0] >> 7) & 0b00000001;
+            this.VNAV = vnav;
+            return this.VNAV;
+        }
+        public int ALTholdDecoding(byte[] data)
+        {
+            int ALThold = (data[0] >> 6) & 0b00000001;
+            this.ALThold = ALThold;
+            return this.ALThold;
+        }
+        public int AppDecoding(byte[] data)
+        {
+            int App = (data[0] >> 5) & 0b00000001;
+            this.App = App;
+            return this.App;
+        }
+        public int targetalt_statusDecoding(byte[] data)
+        {
+            int targetalt_status = (data[0] >> 2) & 0b00000001;
+            this.targetalt_status = targetalt_status;
+            return this.targetalt_status;
+        }
+        public string targetalt_sourceDecoding(byte[] data)
+        {
+            int targetalt_source = (data[0] >> 0) & 0b00000011;
+            Dictionary<int, string> targetalt_sourceDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "Unknown" },
+            { 1, "Aircraft altitude" },
+            { 2, "FCU/MCP selected altitude" },
+            { 3, "FMS selected altitude" }
+        };
+            return targetalt_sourceDescriptions.ContainsKey(targetalt_source) ? targetalt_sourceDescriptions[targetalt_source] : "";
+        }
+        public int RAstatusDecoding(byte[] data)
+        {
+            int RAstatus = (data[0] >> 7) & 0b00000001;
+            this.RAstatus = RAstatus;
+            return this.RAstatus;
+        }
+        public double RADecoding(byte[] data) //valores negativos?
+        {
+            byte RA1 = (byte)((data[0] >> 0) & 0b01111111);
+            byte RA2 = (byte)((data[1] >> 5) & 0b00000111);
+
+            // Determinar el signo
+            byte signByte = (byte)((data[0] >> 6) & 0b00000001);
+            int combinedValue;
+            if (signByte == 0)
+            {
+                // Valor positivo
+                combinedValue = (RA1 << 3) | RA2;
+            }
+            else
+            {
+                // Valor negativo
+                combinedValue = ((RA1 << 3) | RA2);
+                combinedValue = -(~combinedValue + 1);
+            }
+            double resolution = 45.0 / 256.0; //resolución en grados
+            double RA = combinedValue * resolution;
+            this.RA = RA;
+            return this.RA;
+        }
+        public int TTAstatusDecoding(byte[] data)
+        {
+            int TTAstatus = (data[0] >> 4) & 0b00000001;
+            this.TTAstatus = TTAstatus;
+            return this.TTAstatus;
+        }
+        public double TTADecoding(byte[] data)
+        {
+            byte TTA1 = (byte)((data[0] >> 0) & 0b00001111);
+            byte TTA2 = (byte)((data[1] >> 1) & 0b01111111);
+            byte signByte = (byte)((data[0] >> 3) & 0b00000001);
+            
+            int combinedValue;
+            if (signByte == 0)
+            {
+                // Valor positivo
+                combinedValue = (TTA1 << 7) | TTA2;
+            }
+            else
+            {
+                // Valor negativo
+                combinedValue = ((TTA1 << 7) | TTA2);
+                combinedValue = -(~combinedValue + 1);
+            }
+            double resolution = 90.0 / 512.0;
+            double TTA = combinedValue * resolution;
+            this.TTA = TTA;
+            return this.TTA;
+        }
+
+
 
 
 
@@ -631,13 +788,15 @@ namespace OurClasses
             this.theta = ByteToDoubleDecoding(thetavec, resolutionLSB);
             return this.rho;
         }
-
         
 
 
 
 
-    
+
+
+
+
 
 
 
