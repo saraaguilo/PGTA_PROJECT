@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Remoting;
+using System.Runtime.Remoting.Messaging;
 
 
 namespace OurClasses
@@ -9,6 +10,9 @@ namespace OurClasses
     public class Decoder48
     {
         public DateTime timeOfDay { get; set; }
+
+        public double latitude { get; set; }
+        public double longitude { get; set; }
 
         public int SAC { get; set; }
         public int SIC { get; set; }
@@ -80,23 +84,25 @@ namespace OurClasses
         public double RA { get; set; } //roll angle
         public int TTAstatus { get; set; }
         public double TTA { get; set; } //true track angle
-        public double GSstatus { get; set; }
+        public int GSstatus { get; set; }
         public double GS { get; set; } //ground speed
-        public double TARstatus { get; set; }
+        public int TARstatus { get; set; }
         public double TAR { get; set; } //track angle rate
-        public double TASstatus { get; set; }
+        public int TASstatus { get; set; }
         public double TAS { get; set; } //true airspeed
 
-        public double HDGstatus { get; set; }
+        public int HDGstatus { get; set; }
         public double HDG { get; set; }
-        public double IASstatus { get; set; }
+        public int IASstatus { get; set; }
         public double IAS { get; set; }
-        public double MACHstatus { get; set; }
+        public int MACHstatus { get; set; }
         public double MACH { get; set; }
-        public double BARstatus { get; set; }
+        public int BARstatus { get; set; }
         public double BAR { get; set; }
-        public double IVVstatus { get; set; }
+        public int IVVstatus { get; set; }
         public double IVV { get; set; }
+
+        public int tracknumber { get; set; }
 
         public double x_component { get; set; }
         public double y_component { get; set; }
@@ -104,15 +110,18 @@ namespace OurClasses
         public double rho { get; set; }
         public double theta { get; set; }
 
+        public double groundspeedpolar;
+        public double headingpolar;
+
         public string CNF { get; set; }
         public string RAD { get; set; }
         public string DOU { get; set; }
         public string MAH { get; set; }
         public string CDM { get; set; }
-        public string? TRE { get; set; }
-        public string? GHO { get; set; }
-        public string? SUP { get; set; }
-        public string? TCC { get; set; }
+        public string TRE { get; set; }
+        public string GHO { get; set; }
+        public string SUP { get; set; }
+        public string TCC { get; set; }
 
         public double measuredheight { get; set; };
 
@@ -125,8 +134,10 @@ namespace OurClasses
         public string B1A { get; set; }
         public string B1B { get; set; }
 
-        public double latitude { get; set; }
-        public double longitude { get; set; }
+        public Coordinates RadarCoordinates { get; private set; }
+        public GeoUtils GeoUtils { get; private set; } = new GeoUtils();
+
+
 
         public TimeSpan decodeTimeDay(byte[] data)
         {
@@ -147,6 +158,47 @@ namespace OurClasses
             }
 
             return bytesValue * resolution;
+        }
+
+        public double latitudeDecoding(double cooR, double cooTheta, double FL)
+        {
+            int Rt = 6370000;
+            double Fl = 0;
+            if (FL > 0)
+            {
+                Fl = (FL * 100) * GeoUtils.FEET2METERS;
+            }
+            double hr = 27.257; //m
+            double El = Math.Asin((2 * Rt * (Fl - hr) + Math.Pow(Fl, 2) - Math.Pow(hr, 2) - Math.Pow(cooR * GeoUtils.NM2METERS, 2)) / (2 * cooR * GeoUtils.NM2METERS * (Rt + hr)));
+            CoordinatesPolar objectPolar = new CoordinatesPolar(cooR * GeoUtils.NM2METERS, cooTheta * GeoUtils.DEGS2RADS, El);
+            CoordinatesWGS84 radarWGS84 = new CoordinatesWGS84(GeoUtils.LatLon2Degrees(41, 18, 2.5284, 0) * (Math.PI / 180.0), GeoUtils.LatLon2Degrees(2, 6, 7.4095, 0) * (Math.PI / 180.0), 27.257);
+
+            CoordinatesXYZ objectRadarCart = GeoUtils.change_radar_spherical2radar_cartesian(objectPolar);
+            CoordinatesXYZ objectGeocentric = GeoUtils.change_radar_cartesian2geocentric(radarWGS84, objectRadarCart);
+            CoordinatesWGS84 geodesicWGS84 = GeoUtils.change_geocentric2geodesic(objectGeocentric);
+
+            this.latitude = geodesicWGS84.Lat * (180.0 / Math.PI);
+            return this.latitude;
+        }
+        public double longitudeDecoding(double cooR, double cooTheta, double FL)
+        {
+            int Rt = 6370000;
+            double Fl = 0;
+            if (FL > 0)
+            {
+                Fl = (FL * 100) * GeoUtils.FEET2METERS;
+            }
+            double hr = 27.257; //m
+            double El = Math.Asin((2 * Rt * (Fl - hr) + Math.Pow(Fl, 2) - Math.Pow(hr, 2) - Math.Pow(cooR * GeoUtils.NM2METERS, 2)) / (2 * cooR * GeoUtils.NM2METERS * (Rt + hr)));
+            CoordinatesPolar objectPolar = new CoordinatesPolar(cooR * GeoUtils.NM2METERS, cooTheta * GeoUtils.DEGS2RADS, El);
+            CoordinatesWGS84 radarWGS84 = new CoordinatesWGS84(GeoUtils.LatLon2Degrees(41, 18, 2.5284, 0) * (Math.PI / 180.0), GeoUtils.LatLon2Degrees(2, 6, 7.4095, 0) * (Math.PI / 180.0), 27.257);
+
+            CoordinatesXYZ objectRadarCart = GeoUtils.change_radar_spherical2radar_cartesian(objectPolar);
+            CoordinatesXYZ objectGeocentric = GeoUtils.change_radar_cartesian2geocentric(radarWGS84, objectRadarCart);
+            CoordinatesWGS84 geodesicWGS84 = GeoUtils.change_geocentric2geodesic(objectGeocentric);
+
+            this.longitude = geodesicWGS84.Lon * (180.0 / Math.PI);
+            return this.longitude;
         }
 
         public string TYPDecoding(byte[] data)
@@ -757,21 +809,264 @@ namespace OurClasses
             this.TTA = TTA;
             return this.TTA;
         }
+        public int GSstatusDecoding(byte[] data)
+        {
+            int GSstatus = (data[0] >> 0) & 0b00000001;
+            this.GSstatus = GSstatus;
+            return this.GSstatus;
 
+        }
+        public double GSDecoding(byte[] data)
+        {
+            byte gs1 = (byte)((data[0] >> 0) & 0b11111111);
+            byte gs2 = (byte)((data[1] >> 6) & 0b00000011);
 
+            int combinedValue = (gs1 << 2) | gs2;
 
+            double resolution = (double)(1024 / 512); // Resolución en kt
+            double gs = combinedValue * resolution;
+            this.GS = gs;
+            return this.GS;
+        }
+        public int TARstatusDecoding(byte[] data)
+        {
+            int TARstatus = (data[0] >> 5) & 0b00000001;
+            this.TARstatus = TARstatus;
+            return this.TARstatus;
 
+        }
+        public double TARDecoding(byte[] data)
+        {
+            byte TAR1 = (byte)((data[0] >> 0) & 0b00011111);
+            byte TAR2 = (byte)((data[1] >> 3) & 0b00011111);
+            byte signByte = (byte)((data[0] >> 4) & 0b00000001);
 
+            int combinedValue;
+            if (signByte == 0)
+            {
+                // Valor positivo
+                combinedValue = (TAR1 << 5) | TAR2;
+            }
+            else
+            {
+                // Valor negativo
+                combinedValue = ((TAR1 << 5) | TAR2);
+                combinedValue = -(~combinedValue + 1);
+            }
+            double resolution = (double)(8 / 256); //resolución en grados/s
+            double TAR = combinedValue * resolution;
+            this.TAR = TAR;
+            return this.TAR;
+        }
+        public int TASstatusDecoding(byte[] data)
+        {
+            int TASstatus = (data[0] >> 2) & 0b00000001;
+            this.TASstatus = TASstatus;
+            return this.TASstatus;
 
+        }
+        public double TASDecoding(byte[] data)
+        {
+            byte tas1 = (byte)((data[0] >> 0) & 0b00000011);
+            byte tas2 = (byte)((data[1] >> 0) & 0b11111111);
 
+            int combinedValue = (tas1 << 8) | tas2;
 
+            double resolution = 2; // Resolución en kt
+            double tas = combinedValue * resolution;
+            this.TAS = tas;
+            return this.TAS;
 
+        }
+        public int HDGstatusDecoding(byte[] data)
+        {
+            int HDGstatus = (data[0] >> 7) & 0b00000001;
+            this.HDGstatus = HDGstatus;
+            return this.HDGstatus;
 
+        }
+        public double HDGDecoding(byte[] data)
+        {
+            byte HDG1 = (byte)((data[0] >> 0) & 0b01111111);
+            byte HDG2 = (byte)((data[1] >> 4) & 0b00001111);
+            byte signByte = (byte)((data[0] >> 6) & 0b00000001);
 
+            int combinedValue;
+            if (signByte == 0)
+            {
+                // Valor positivo
+                combinedValue = (HDG1 << 4) | HDG2;
+            }
+            else
+            {
+                // Valor negativo
+                combinedValue = ((HDG1 << 4) | HDG2);
+                combinedValue = -(~combinedValue + 1);
+            }
+            double resolution = (double)(90 / 512); //resolución en grados/s
+            double HDG = combinedValue * resolution;
+            this.HDG = HDG;
+            return this.HDG;
 
+        }
+        public int IASstatusDecoding(byte[] data)
+        {
+            int IASstatus = (data[0] >> 3) & 0b00000001;
+            this.IASstatus = IASstatus;
+            return this.IASstatus;
 
+        }
+        public double IASDecoding(byte[] data)
+        {
+            byte ias1 = (byte)((data[0] >> 0) & 0b00000111);
+            byte ias2 = (byte)((data[1] >> 1) & 0b01111111);
 
+            int combinedValue = (ias1 << 7) | ias2;
 
+            double resolution = 1; // Resolución en kt
+            double ias = combinedValue * resolution;
+            this.IAS = ias;
+            return this.IAS;
+        }
+        public int MACHstatusDecoding(byte[] data)
+        {
+            int MACHstatus = (data[0] >> 0) & 0b00000001;
+            this.MACHstatus = MACHstatus;
+            return this.MACHstatus;
+
+        }
+        public double MACHDecoding(byte[] data)
+        {
+            byte mach1 = (byte)((data[0] >> 0) & 0b11111111);
+            byte mach2 = (byte)((data[1] >> 6) & 0b00000011);
+
+            int combinedValue = (mach1 << 2) | mach2;
+
+            double resolution = 2048.0/512.0; // Resolución en kt
+            double mach = combinedValue * resolution;
+            this.MACH = mach;
+            return this.MACH;
+        }
+        public int BARstatusDecoding(byte[] data)
+        {
+            int BARstatus = (data[0] >> 5) & 0b00000001;
+            this.BARstatus = BARstatus;
+            return this.BARstatus;
+
+        }
+        public double BARDecoding(byte[] data)
+        {
+            byte BAR1 = (byte)((data[0] >> 0) & 0b00011111);
+            byte BAR2 = (byte)((data[1] >> 3) & 0b00011111);
+            byte signByte = (byte)((data[0] >> 4) & 0b00000001);
+
+            int combinedValue;
+            if (signByte == 0)
+            {
+                // Valor positivo
+                combinedValue = (BAR1 << 5) | BAR2;
+            }
+            else
+            {
+                // Valor negativo
+                combinedValue = ((BAR1 << 5) | BAR2);
+                combinedValue = -(~combinedValue + 1);
+            }
+            double resolution = (double)(32.0); //resolución en ft/min
+            double BAR = combinedValue * resolution;
+            this.BAR = BAR;
+            return this.BAR;
+        }
+        public int IVVstatusDecoding(byte[] data)
+        {
+            int IVVstatus = (data[0] >> 2) & 0b00000001;
+            this.IVVstatus = IVVstatus;
+            return this.IVVstatus;
+        }
+        public double IVVDecoding(byte[] data)
+        {
+            byte IVV1 = (byte)((data[0] >> 0) & 0b00000011);
+            byte IVV2 = (byte)((data[1] >> 0) & 0b11111111);
+            byte signByte = (byte)((data[0] >> 1) & 0b00000001);
+
+            int combinedValue;
+            if (signByte == 0)
+            {
+                // Valor positivo
+                combinedValue = (IVV1 << 8) | IVV2;
+            }
+            else
+            {
+                // Valor negativo
+                combinedValue = ((IVV1 << 8) | IVV2);
+                combinedValue = -(~combinedValue + 1);
+            }
+            double resolution = (double)(32.0); //resolución en ft/min
+            double IVV = combinedValue * resolution;
+            this.IVV = IVV;
+            return this.IVV;
+        }
+        public int tracknumberDecoding(byte[] data)
+        {
+            byte track1 = (byte)((data[0] >> 0) & 0b00001111);
+            byte track2 = (byte)((data[1] >> 0) & 0b11111111);
+            double resolution = 1;
+            int combinedValue;
+            combinedValue = (track1 << 8) | track2;
+            double tracknumber = combinedValue * resolution;
+            this.tracknumber = tracknumber;
+            return this.tracknumber;
+        }
+        public double x_componentDecoding(byte[] data)
+        {
+            byte x1 = (byte)((data[0] >> 0) & 0b11111111);
+            byte x2 = (byte)((data[1] >> 0) & 0b11111111);
+            byte signByte = (byte)((data[0] >> 7) & 0b00000001); 
+
+            int combinedValue;
+
+            if (signByte == 0)
+            {
+                // Valor positivo
+                combinedValue = (x1 << 8) | x2;
+            }
+            else
+            {
+                // Valor negativo
+                combinedValue = ((x1 << 8) | x2);
+                combinedValue = -(~combinedValue + 1);
+            }
+
+            double resolution = (double)(1 / 128.0); // Resolución en NM
+            double x = combinedValue * resolution;
+            this.x_component = x;
+            return this.x_component;
+        }
+        public double y_componentDecoding(byte[] data)
+        {
+            byte y1 = (byte)((data[0] >> 0) & 0b11111111);
+            byte y2 = (byte)((data[1] >> 0) & 0b11111111);
+            byte signByte = (byte)((data[0] >> 7) & 0b00000001);
+
+            int combinedValue;
+
+            if (signByte == 0)
+            {
+                // Valor positivo
+                combinedValue = (y1 << 8) | y2;
+            }
+            else
+            {
+                // Valor negativo
+                combinedValue = ((y1 << 8) | y2);
+                combinedValue = -(~combinedValue + 1);
+            }
+
+            double resolution = (double)(1 / 128.0); // Resolución en NM
+            double y = combinedValue * resolution;
+            this.y_component = y;
+            return this.y_component;
+        }
 
         public double PolarRhoDecoding(byte[] data)
         {
@@ -786,9 +1081,232 @@ namespace OurClasses
             byte[] thetavec = new byte[] { data[2], data[3] }; //se cogen 16 bits
             double resolutionLSB = 360.0 / Math.Pow(2, 16);
             this.theta = ByteToDoubleDecoding(thetavec, resolutionLSB);
-            return this.rho;
+            return this.theta;
         }
-        
+
+        public double groundspeedpolarDecoding(byte[] data)
+        {
+     
+            int combinedValue = (data[0] << 8) | data[1];
+            bool isNegative = (combinedValue & 0x8000) != 0;
+            if (isNegative)
+            {
+                combinedValue = -(~combinedValue + 1);
+            }
+
+            double resolution = Math.Pow(2, -14) * 3600; // Resolución en NM
+            this.groundspeedpolar = combinedValue * resolution;
+
+            return this.groundspeedpolar;
+        }
+
+        public double headingpolarDecoding(byte[] data)
+        {
+            int combinedValue = (data[2] << 8) | data[3];
+            bool isNegative = (combinedValue & 0x8000) != 0;
+            if (isNegative)
+            {
+                combinedValue = -(~combinedValue + 1);
+            }
+            double resolution = 360.0 / Math.Pow(2, 16); // Resolución en grados
+            this.headingpolar = combinedValue * resolution;
+
+            return this.headingpolar;
+        }
+
+        public string CNFDecoding(byte[] data)
+        {
+            int cnf = (data[0] >> 7) & 0b00000001;
+            Dictionary<int, string> cnfDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "Confirmed Track" },
+            { 1, "Tentative Track" }
+        };
+            return cnfDescriptions.ContainsKey(cnf) ? cnfDescriptions[cnf] : "";
+
+        }
+        public string RADDecoding(byte[] data)
+        {
+            int rad = (data[0] >> 5) & 0b00000011;
+            Dictionary<int, string> radDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "Combined Track" },
+            { 1, "PSR Track" },
+            { 2, "SSR/Mode S Track" },
+            { 3, "Invalid" }
+        };
+            return radDescriptions.ContainsKey(rad) ? radDescriptions[rad] : "";
+        }
+        public string DOUDecoding(byte[] data)
+        {
+            int dou = (data[0] >> 4) & 0b00000001;
+            Dictionary<int, string> douDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "Normal confidence" },
+            { 1, "Low confidence in plot to track association" }
+        };
+            return douDescriptions.ContainsKey(dou) ? douDescriptions[dou] : "";
+
+        }
+        public string MAHDecoding(byte[] data)
+        {
+            int mah = (data[0] >> 3) & 0b00000001;
+            Dictionary<int, string> mahDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "No horizontal man.sensed" },
+            { 1, "Horizontal man. sensed" }
+        };
+            return mahDescriptions.ContainsKey(mah) ? mahDescriptions[mah] : "";
+
+        }
+        public string CDMDecoding(byte[] data)
+        {
+            int cdm = (data[0] >> 1) & 0b00000011;
+            Dictionary<int, string> cdmDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "Maintaining" },
+            { 1, "Climbing" },
+            { 2, "Descending" },
+            { 3, "Unknown" }
+        };
+            return cdmDescriptions.ContainsKey(cdm) ? cdmDescriptions[cdm] : "";
+        }
+        public string TREDecoding(byte[] data)
+        {
+            return this.TRE;
+
+        }
+        public string GHODecoding(byte[] data)
+        {
+            return this.GHO;
+
+        }
+        public string SUPDecoding(byte[] data)
+        {
+            return this.SUP;
+
+        }
+        public string TCCDecoding(byte[] data)
+        {
+            return this.TCC;
+
+        }
+        public double measuredheightDecoding(byte[] data)
+        {
+            byte h1 = (byte)((data[0] >> 0) & 0b00111111);
+            byte h2 = (byte)((data[1] >> 0) & 0b11111111);
+            byte signByte = (byte)((data[0] >> 5) & 0b00000001);
+
+            int combinedValue;
+
+            if (signByte == 0)
+            {
+                // Valor positivo
+                combinedValue = (h1 << 8) | h2;
+            }
+            else
+            {
+                // Valor negativo
+                combinedValue = ((h1 << 8) | h2);
+                combinedValue = -(~combinedValue + 1);
+            }
+
+            double resolution = (double)(25.0); // Resolución en ft
+            double h = combinedValue * resolution;
+            this.measuredheight = h;
+            return this.measuredheight;
+        }
+        public string COMDecoding(byte[] data)
+        {
+            int com = (data[0] >> 5) & 0b00000111;
+            Dictionary<int, string> comDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "No communications capability (surveillance only)" },
+            { 1, "Comm. A and Comm. B capability" },
+            { 2, "Comm. A, Comm. B and Uplink ELM" },
+            { 3, "Comm. A, Comm. B, Uplink ELM and Downlink ELM" },
+            { 4, "Level 5 Transponder capability" },
+            { 5, "Not assigned" },
+            { 6, "Not assigned" },
+            { 7, "Not assigned" }
+        };
+            return comDescriptions.ContainsKey(com) ? comDescriptions[com] : "";
+        }
+        public string STATDecoding(byte[] data)
+        {
+            int stat = (data[0] >> 2) & 0b00000111;
+            Dictionary<int, string> statDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "No alert, no SPI, aircraft airborne" },
+            { 1, "No alert, no SPI, aircraft on ground" },
+            { 2, "Alert, no SPI, aircraft airborne" },
+            { 3, "Alert, no SPI, aircraft on ground" },
+            { 4, "Alert, SPI, aircraft airborne or on ground" },
+            { 5, "No alert, SPI, aircraft airborne or on ground" },
+            { 6, "Not assigned" },
+            { 7, "Unknown" }
+        };
+            return statDescriptions.ContainsKey(stat) ? statDescriptions[stat] : "";
+        }
+        public string SIDecoding(byte[] data)
+        {
+            int si = (data[0] >> 1) & 0b00000001;
+            Dictionary<int, string> siDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "SI-Code Capable" },
+            { 1, "II-Code Capable" }
+        };
+            return siDescriptions.ContainsKey(si) ? siDescriptions[si] : "";
+        }
+        public string MSCCDecoding(byte[] data)
+        {
+            int mscc = (data[1] >> 7) & 0b00000001;
+            Dictionary<int, string> msccDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "No" },
+            { 1, "Yes" }
+        };
+            return msccDescriptions.ContainsKey(mscc) ? msccDescriptions[mscc] : "";
+        }
+        public string ARCDecoding(byte[] data)
+        {
+            int arc = (data[1] >> 6) & 0b00000001;
+            Dictionary<int, string> arcDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "100 ft resolution" },
+            { 1, "25 ft resolution" }
+        };
+            return arcDescriptions.ContainsKey(arc) ? arcDescriptions[arc] : "";
+        }
+        public string AICDecoding(byte[] data)
+        {
+            int aic = (data[1] >> 5) & 0b00000001;
+            Dictionary<int, string> aicDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "No" },
+            { 1, "Yes" }
+        };
+            return aicDescriptions.ContainsKey(aic) ? aicDescriptions[aic] : "";
+        }
+        public string B1ADecoding(byte[] data)
+        {
+            int b1a = (data[1] >> 4) & 0b00000001;
+            Dictionary<int, string> b1aDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "BDS 1,0 bit 16 = 0" },
+            { 1, "BDS 1,0 bit 16 = 1" }
+        };
+            return b1aDescriptions.ContainsKey(b1a) ? b1aDescriptions[b1a] : "";
+        }
+        public string B1BDecoding(byte[] data)
+        {
+            int B1B = (data[1] >> 0) & 0b00001111;
+            this.B1B= "BDS 1,0 bits 37/40 = " + Convert.ToString(B1B, 2).PadLeft(4, '0');
+            return this.B1B;
+        }
+               
+
+    }
 
 
 
@@ -811,4 +1329,6 @@ namespace OurClasses
 
 
 
- }
+
+
+    }
