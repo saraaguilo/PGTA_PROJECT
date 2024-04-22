@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.Text;
+using OurClasses;
 
 
 class Program
@@ -20,13 +21,30 @@ class Program
         {
             List<byte> fspec = Fspec(Messages[i]);
 
-            if(i == 5001)
+            byte[] data = Data(Messages[i], fspec.Count);
+
+            if (i == 0)
             {
                 Console.WriteLine(string.Join(",", fspec));
-            }
-        }
 
-        //Console.WriteLine(string.Join(",",Messages[5001]));
+                Console.WriteLine(string.Join(",", data));
+
+                Console.WriteLine(string.Join(",", Messages[i]));
+            }
+
+            break;
+
+            classifyparams(fspec, data);
+        }
+    }
+
+    static byte[] Data(byte[] message, int Lenfspec)
+    {
+        byte[] data = new byte[message.Length - Lenfspec -3];
+
+        Array.Copy(message, Lenfspec + 3, data, 0, message.Length - Lenfspec - 3);
+
+        return data;
     }
 
     static List<byte[]> GetCat48Messages(byte[] fileBytes)
@@ -77,5 +95,169 @@ class Program
             else { i = 0; }
         }
         return fspec;
+    }
+
+    static void classifyparams(List<byte> fspec, byte[] data)
+    {
+        Decoder48 decoder48 = new Decoder48();
+        if (1 == ((fspec[0] >> 7) & 0b00000001))
+        {
+            byte SAC = data[0];
+            byte SIC = data[1];
+            Array.Copy(data, 2, data, 0, data.Length -2);
+        }
+        if (1 == ((fspec[0] >> 6) & 0b00000001))
+        {
+            byte[] data_item_140 = new byte[3]; 
+            Array.Copy(data, 0, data_item_140, 0, 3);
+            TimeSpan TimeofDay = decoder48.decodeTimeDay(data_item_140);
+            Array.Copy(data, 3, data, 0, data.Length - 3);
+        }
+        if (1 == ((fspec[0] >> 5) & 0b00000001))
+        {
+     
+        }
+        if (1 == ((fspec[0] >> 4) & 0b00000001))
+        {
+            byte[] data_item_040 = new byte[4];
+            Array.Copy(data, 0, data_item_040, 0, 4);
+            var result040 = decoder48.decode040(data_item_040);
+            float rho = result040[0];
+            float theta = result040[1];
+            Array.Copy(data, 4, data, 0, data.Length - 4);
+        }
+        if (1 == ((fspec[0] >> 3) & 0b00000001))
+        {
+            byte[] data_item_070 = new byte[2];
+            Array.Copy(data, 0, data_item_070, 0, 2);
+            var result070 = decoder48.decode070(data_item_070);
+            Array.Copy(data, 2, data, 0, data.Length - 2);
+
+        }
+        if (1 == ((fspec[0] >> 2) & 0b00000001))
+        {
+            byte[] data_item_090 = new byte[2];
+            Array.Copy(data, 0, data_item_090, 0, 2);
+            var result090 = decoder48.decode090(data_item_090);
+            Array.Copy(data, 2, data, 0, data.Length - 2);
+        }
+        if (1 == ((fspec[0] >> 1) & 0b00000001))
+        {
+
+        }
+        if (1 == ((fspec[0] & 0b00000001)))
+        {
+            if (1 == ((fspec[1] >> 7) & 0b00000001))
+            {
+                byte[] data_item_220 = new byte[3];
+                Array.Copy(data, 0, data_item_220, 0, 3);
+                var result220 = decoder48.decode220(data_item_220);
+                Array.Copy(data, 3, data, 0, data.Length - 3);
+            }
+            if (1 == ((fspec[1] >> 6) & 0b00000001))
+            {
+                byte[] data_item_240 = new byte[6];
+                Array.Copy(data, 0, data_item_240, 0, 6);
+                var result240 = decoder48.decode240(data_item_240);
+                Array.Copy(data, 6, data, 0, data.Length - 6);
+            }
+            if (1 == ((fspec[1] >> 5) & 0b00000001))
+            {
+
+            }
+            if (1 == ((fspec[1] >> 4) & 0b00000001))
+            {
+                byte[] data_item_161 = new byte[2];
+                Array.Copy(data, 0, data_item_161, 0, 2);
+                var result161 = decoder48.tracknumberDecoding(data_item_161);
+                Array.Copy(data, 2, data, 0, data.Length - 2);
+            }
+            if (1 == ((fspec[1] >> 3) & 0b00000001))
+            {
+                byte[] data_item_042 = new byte[4];
+                Array.Copy(data, 0, data_item_042, 0, 4);
+                var result042 = decoder48.decode042(data_item_042);
+                Array.Copy(data, 4, data, 0, data.Length - 4);
+            }
+            if (1 == ((fspec[1] >> 2) & 0b00000001))
+            {
+                byte[] data_item_200 = new byte[4];
+                Array.Copy(data, 0, data_item_200, 0, 4);
+                var result0200 = decoder48.decode200(data_item_200);
+                Array.Copy(data, 4, data, 0, data.Length - 4);
+            }
+            if (1 == ((fspec[1] >> 1) & 0b00000001))
+            {
+
+            }
+            if (1 == ((fspec[1] & 0b00000001)))
+            {
+                if (1 == ((fspec[2] >> 7) & 0b00000001))
+                {
+                    Array.Copy(data, 4, data, 0, data.Length - 4);
+                }
+                if (1 == ((fspec[2] >> 6) & 0b00000001))
+                {
+
+                }
+                if (1 == ((fspec[2] >> 5) & 0b00000001))
+                {
+                    Array.Copy(data, 2, data, 0, data.Length - 2);
+                }
+                if (1 == ((fspec[2] >> 4) & 0b00000001))
+                {
+                    Array.Copy(data, 4, data, 0, data.Length - 4);
+                }
+                if (1 == ((fspec[2] >> 3) & 0b00000001))
+                {
+                    byte[] data_item_110 = new byte[2];
+                    Array.Copy(data, 0, data_item_110, 0, 2);
+                    var result110 = decoder48.decode110(data_item_110);
+                    Array.Copy(data, 2, data, 0, data.Length - 2);
+                }
+                if (1 == ((fspec[2] >> 2) & 0b00000001))
+                {
+
+                }
+                if (1 == ((fspec[2] >> 1) & 0b00000001))
+                {
+                    byte[] data_item_230 = new byte[2];
+                    Array.Copy(data, 0, data_item_230, 0, 2);
+                    var result230 = decoder48.decode230(data_item_230);
+                    Array.Copy(data, 2, data, 0, data.Length - 2);
+                }
+                if (1 == ((fspec[2] & 0b00000001)))
+                {
+                    if (1 == ((fspec[3] >> 7) & 0b00000001))
+                    {
+                        Array.Copy(data, 7, data, 0, data.Length - 7);
+                    }
+                    if (1 == ((fspec[3] >> 6) & 0b00000001))
+                    {
+                        Array.Copy(data, 1, data, 0, data.Length - 1);
+                    }
+                    if (1 == ((fspec[3] >> 5) & 0b00000001))
+                    {
+                        Array.Copy(data, 2, data, 0, data.Length - 2);
+                    }
+                    if (1 == ((fspec[3] >> 4) & 0b00000001))
+                    {
+                        Array.Copy(data, 1, data, 0, data.Length - 1);
+                    }
+                    if (1 == ((fspec[3] >> 3) & 0b00000001))
+                    {
+                        Array.Copy(data, 2, data, 0, data.Length - 2);
+                    }
+                    if (1 == ((fspec[3] >> 2) & 0b00000001))
+                    {
+
+                    }
+                    if (1 == ((fspec[3] >> 1) & 0b00000001))
+                    {
+
+                    }
+                }
+            }
+        }
     }
 }
