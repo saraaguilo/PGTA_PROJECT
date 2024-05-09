@@ -138,7 +138,8 @@ namespace OurClasses
         public GeoUtils GeoUtils { get; private set; } = new GeoUtils();
 
 
-
+        //DECODE 140
+        //--------------------------------------------------------------
         public TimeSpan decodeTimeDay(byte[] data)
         {
             double resolution = Math.Pow(2, -7); //in seconds
@@ -146,7 +147,9 @@ namespace OurClasses
             TimeSpan TimeofDay = TimeSpan.FromSeconds(seconds);
             return TimeofDay;
         }
-
+        //--------------------------------------------------------------
+        //GENERAL FUNCTION
+        //---------------------------------------------------------------
         private double ByteToDoubleDecoding(byte[] data, double resolution)
         {
             double bytesValue = 0;
@@ -159,6 +162,7 @@ namespace OurClasses
 
             return bytesValue * resolution;
         }
+        //---------------------------------------------------------------
 
         public double latitudeDecoding(double cooR, double cooTheta, double FL)
         {
@@ -386,12 +390,14 @@ namespace OurClasses
 
         }
 
+        //DECODE 070
+        //-----------------------------------------------------------------
         //ahora vamos a decodificara los parámetros de Mode-3A, en representación octal
 
         public string VDecoding(byte[] data)
         {
             
-            int[] v = (data[0] >> 7) & 0b00000001;
+            int v = (data[0] >> 7) & 0b00000001;
             Dictionary<int, string> vDescriptions = new Dictionary<int, string>()
     {
         { 0, "Code validated" },
@@ -403,7 +409,7 @@ namespace OurClasses
         public string GDecoding(byte[] data)
         {
 
-            int[] g = (data[0] >> 6) & 0b00000001;
+            int g = (data[0] >> 6) & 0b00000001;
             Dictionary<int, string> gDescriptions = new Dictionary<int, string>()
     {
         { 0, "Default" },
@@ -415,7 +421,7 @@ namespace OurClasses
         public string LDecoding(byte[] data)
         {
 
-            int[] l = (data[0] >> 5) & 0b00000001;
+            int l = (data[0] >> 5) & 0b00000001;
             Dictionary<int, string> lDescriptions = new Dictionary<int, string>()
     {
         { 0, "Mode-3/A code derived from the reply of the transponder" },
@@ -433,9 +439,21 @@ namespace OurClasses
             int D = dataItem[1] & 0b00000111;
             int mode3A = A * 1000 + B * 100 + C * 10 + D;
             // Queremos que el resultado tenga al menos 3 dígitos
-            string mode3AFormatted = mode3A.ToString("D3");
+            string mode3AFormatted = mode3A.ToString();
             return mode3AFormatted;
         }
+
+        public (string, string, string, string) decode070(byte[] data)
+        {
+            string V = VDecoding(data);
+            string G = GDecoding(data);
+            string L = LDecoding(data);
+            string mode3A = mode3ADecoding(data);
+            return (V, G, L, mode3A);
+        }
+        //---------------------------------------------------------------
+        //DECODE 090
+        //---------------------------------------------------------------
         //Ahora vamos a decodificar el flight level (binary representation)
         public string V2Decoding(byte[] data)
         {
@@ -478,6 +496,16 @@ namespace OurClasses
             return this.FL;
 
         }
+
+        public (string, string, double) decode090(byte[] data)
+        {
+            string V = V2Decoding(data);
+            string G = G2Decoding(data);
+            double FL = FLDecoding(data);
+            return (V, G, FL);
+        }
+
+        //---------------------------------------------------------------
         //Ahora se decodificará Radar Plot Characteristics
         public string SRLDecoding(byte[] data)
         {
@@ -1006,6 +1034,9 @@ namespace OurClasses
             this.IVV = IVV;
             return this.IVV;
         }
+
+        //DECODE 161
+        //----------------------------------------------------------------
         public int tracknumberDecoding(byte[] data)
         {
             byte track1 = (byte)((data[0] >> 0) & 0b00001111);
@@ -1013,10 +1044,13 @@ namespace OurClasses
             double resolution = 1;
             int combinedValue;
             combinedValue = (track1 << 8) | track2;
-            double tracknumber = combinedValue * resolution;
-            this.tracknumber = tracknumber;
-            return this.tracknumber;
+            int tracknumber = (int)(combinedValue * resolution);
+            return tracknumber;
         }
+        //----------------------------------------------------------------
+
+        //DECODE 042
+        //----------------------------------------------------------------
         public double x_componentDecoding(byte[] data)
         {
             byte x1 = (byte)((data[0] >> 0) & 0b11111111);
@@ -1044,9 +1078,9 @@ namespace OurClasses
         }
         public double y_componentDecoding(byte[] data)
         {
-            byte y1 = (byte)((data[0] >> 0) & 0b11111111);
-            byte y2 = (byte)((data[1] >> 0) & 0b11111111);
-            byte signByte = (byte)((data[0] >> 7) & 0b00000001);
+            byte y1 = (byte)((data[2] >> 0) & 0b11111111);
+            byte y2 = (byte)((data[3] >> 0) & 0b11111111);
+            byte signByte = (byte)((data[2] >> 7) & 0b00000001);
 
             int combinedValue;
 
@@ -1068,6 +1102,16 @@ namespace OurClasses
             return this.y_component;
         }
 
+        public (double, double) decode042(byte[] data)
+        {
+            double x = x_componentDecoding(data);
+            double y = y_componentDecoding(data);
+            return (x, y);
+        }
+        //----------------------------------------------------------------
+
+        // DECODE 040
+        //----------------------------------------------------------------
         public double PolarRhoDecoding(byte[] data)
         {
             byte[] rhovec = new byte[] { data[0], data[1] }; //se cogen 16 bits
@@ -1084,6 +1128,16 @@ namespace OurClasses
             return this.theta;
         }
 
+        public (double, double) decode040(byte[] data)
+        {
+            double rho = PolarRhoDecoding(data);
+            double theta = PolarThetaDecoding(data);
+            return (rho, theta);
+        }
+        //---------------------------------------------------------------
+
+        // DECODE 200
+        //----------------------------------------------------------------
         public double groundspeedpolarDecoding(byte[] data)
         {
      
@@ -1113,6 +1167,14 @@ namespace OurClasses
 
             return this.headingpolar;
         }
+
+        public (double, double) decode200(byte[] data)
+        {
+            double groundspeed = groundspeedpolarDecoding(data);
+            double heading = headingpolarDecoding(data);
+            return (groundspeed, heading);
+        }
+        //----------------------------------------------------------------
 
         public string CNFDecoding(byte[] data)
         {
@@ -1191,6 +1253,9 @@ namespace OurClasses
             return this.TCC;
 
         }
+
+        // DECODE 110
+        //----------------------------------------------------------------
         public double measuredheightDecoding(byte[] data)
         {
             byte h1 = (byte)((data[0] >> 0) & 0b00111111);
@@ -1216,6 +1281,10 @@ namespace OurClasses
             this.measuredheight = h;
             return this.measuredheight;
         }
+        //----------------------------------------------------------------
+
+        // DECODE 230
+        //----------------------------------------------------------------
         public string COMDecoding(byte[] data)
         {
             int com = (data[0] >> 5) & 0b00000111;
@@ -1304,31 +1373,190 @@ namespace OurClasses
             this.B1B= "BDS 1,0 bits 37/40 = " + Convert.ToString(B1B, 2).PadLeft(4, '0');
             return this.B1B;
         }
-               
+        public (string, string, string, string, string, string, string, string) decode230(byte[] data)
+        {
+            string COM = COMDecoding(data);
+            string STAT = STATDecoding(data);
+            string SID = SIDecoding(data);
+            string MSCC = MSCCDecoding(data);
+            string ARC = ARCDecoding(data);
+            string AIC = AICDecoding(data);
+            string B1A = B1ADecoding(data);
+            string B1B = B1BDecoding(data);
+            return (COM, STAT, SID, MSCC, ARC, AIC, B1A, B1B);
+        }
+        //----------------------------------------------------------------
 
+        // DECODE 220
+        //----------------------------------------------------------------
+        public string decode220(byte[] data)
+        {
+            string aircraft_address = BitConverter.ToString(data).Replace("-", "");
+            return aircraft_address;
+        }
+        //----------------------------------------------------------------
+
+        // DECODE 240
+        //----------------------------------------------------------------
+        public string[] decode240(byte[] data)
+        {
+            string cadenabits = string.Join("", Array.ConvertAll(data, b => Convert.ToString(b, 2).PadLeft(8, '0')));
+
+            string[] aircraft_identification = new string[8];
+            for (int i = 0; i < 8; i++)
+            {
+                aircraft_identification[i] = cadenabits.Substring(i * 6, 6);
+                if (aircraft_identification[i] == "000001")
+                {
+                    aircraft_identification[i] = "A";
+                }
+                if (aircraft_identification[i] == "000010")
+                {
+                    aircraft_identification[i] = "B";
+                }
+                if (aircraft_identification[i] == "000011")
+                {
+                    aircraft_identification[i] = "C";
+                }
+                if (aircraft_identification[i] == "000100")
+                {
+                    aircraft_identification[i] = "D";
+                }
+                if (aircraft_identification[i] == "000101")
+                {
+                    aircraft_identification[i] = "E";
+                }
+                if (aircraft_identification[i] == "000110")
+                {
+                    aircraft_identification[i] = "F";
+                }
+                if (aircraft_identification[i] == "000111")
+                {
+                    aircraft_identification[i] = "G";
+                }
+                if (aircraft_identification[i] == "001000")
+                {
+                    aircraft_identification[i] = "H";
+                }
+                if (aircraft_identification[i] == "001001")
+                {
+                    aircraft_identification[i] = "I";
+                }
+                if (aircraft_identification[i] == "001010")
+                {
+                    aircraft_identification[i] = "J";
+                }
+                if (aircraft_identification[i] == "001011")
+                {
+                    aircraft_identification[i] = "K";
+                }
+                if (aircraft_identification[i] == "001100")
+                {
+                    aircraft_identification[i] = "L";
+                }
+                if (aircraft_identification[i] == "001101")
+                {
+                    aircraft_identification[i] = "M";
+                }
+                if (aircraft_identification[i] == "001110")
+                {
+                    aircraft_identification[i] = "N";
+                }
+                if (aircraft_identification[i] == "001111")
+                {
+                    aircraft_identification[i] = "O";
+                }
+                if (aircraft_identification[i] == "010000")
+                {
+                    aircraft_identification[i] = "P";
+                }
+                if (aircraft_identification[i] == "010001")
+                {
+                    aircraft_identification[i] = "Q";
+                }
+                if (aircraft_identification[i] == "010010")
+                {
+                    aircraft_identification[i] = "R";
+                }
+                if (aircraft_identification[i] == "010011")
+                {
+                    aircraft_identification[i] = "S";
+                }
+                if (aircraft_identification[i] == "010100")
+                {
+                    aircraft_identification[i] = "T";
+                }
+                if (aircraft_identification[i] == "010101")
+                {
+                    aircraft_identification[i] = "U";
+                }
+                if (aircraft_identification[i] == "010110")
+                {
+                    aircraft_identification[i] = "V";
+                }
+                if (aircraft_identification[i] == "010111")
+                {
+                    aircraft_identification[i] = "W";
+                }
+                if (aircraft_identification[i] == "011000")
+                {
+                    aircraft_identification[i] = "X";
+                }
+                if (aircraft_identification[i] == "011001")
+                {
+                    aircraft_identification[i] = "Y";
+                }
+                if (aircraft_identification[i] == "011010")
+                {
+                    aircraft_identification[i] = "Z";
+                }
+                if (aircraft_identification[i] == "100000")
+                {
+                    aircraft_identification[i] = " ";
+                }
+                if (aircraft_identification[i] == "110000")
+                {
+                    aircraft_identification[i] = "0";
+                }
+                if (aircraft_identification[i] == "110001")
+                {
+                    aircraft_identification[i] = "1";
+                }
+                if (aircraft_identification[i] == "110010")
+                {
+                    aircraft_identification[i] = "2";
+                }
+                if (aircraft_identification[i] == "110011")
+                {
+                    aircraft_identification[i] = "3";
+                }
+                if (aircraft_identification[i] == "110100")
+                {
+                    aircraft_identification[i] = "4";
+                }
+                if (aircraft_identification[i] == "110101")
+                {
+                    aircraft_identification[i] = "5";
+                }
+                if (aircraft_identification[i] == "110110")
+                {
+                    aircraft_identification[i] = "6";
+                }
+                if (aircraft_identification[i] == "110111")
+                {
+                    aircraft_identification[i] = "7";
+                }
+                if (aircraft_identification[i] == "111000")
+                {
+                    aircraft_identification[i] = "8";
+                }
+                if (aircraft_identification[i] == "111001")
+                {
+                    aircraft_identification[i] = "9";
+                }
+            }
+            return aircraft_identification;
+        }
+        //----------------------------------------------------------------
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }
+}

@@ -130,16 +130,14 @@ class Program
         {
             byte[] data_item_040 = new byte[4];
             Array.Copy(data, 0, data_item_040, 0, 4);
-            var result040 = decoder48.decode040(data_item_040);
-            float rho = result040[0];
-            float theta = result040[1];
+            var (rho, theta) = decoder48.decode040(data_item_040);
             Array.Copy(data, 4, data, 0, data.Length - 4);
         }
         if (1 == ((fspec[0] >> 3) & 0b00000001))
         {
             byte[] data_item_070 = new byte[2];
             Array.Copy(data, 0, data_item_070, 0, 2);
-            var result070 = decoder48.decode070(data_item_070);
+            var (V070,G070, L070, mode3A) = decoder48.decode070(data_item_070);
             Array.Copy(data, 2, data, 0, data.Length - 2);
 
         }
@@ -147,7 +145,7 @@ class Program
         {
             byte[] data_item_090 = new byte[2];
             Array.Copy(data, 0, data_item_090, 0, 2);
-            var result090 = decoder48.decode090(data_item_090);
+            var (V, G, FL) = decoder48.decode090(data_item_090);
             Array.Copy(data, 2, data, 0, data.Length - 2);
         }
         if (1 == ((fspec[0] >> 1) & 0b00000001))
@@ -171,29 +169,29 @@ class Program
             {
                 byte[] data_item_220 = new byte[3];
                 Array.Copy(data, 0, data_item_220, 0, 3);
-                var result220 = decoder48.decode220(data_item_220);
+                string result220 = decoder48.decode220(data_item_220);
                 Array.Copy(data, 3, data, 0, data.Length - 3);
             }
             if (1 == ((fspec[1] >> 6) & 0b00000001))
             {
                 byte[] data_item_240 = new byte[6];
                 Array.Copy(data, 0, data_item_240, 0, 6);
-                var result240 = decoder48.decode240(data_item_240);
+                string[] result240 = decoder48.decode240(data_item_240);
                 Array.Copy(data, 6, data, 0, data.Length - 6);
             }
             if (1 == ((fspec[1] >> 5) & 0b00000001))
             {
-                int len = data[0]*8+1
+                int len = data[0] * 8 + 1;
                 byte[] data_item_250 = new byte[len];
                 Array.Copy(data, 0, data_item_250, 0, len);
-                var result250 = decoder48.decode240(data_item_250);
+                var result250 = decoder48.decode250(data_item_250);
                 Array.Copy(data, len, data, 0, data.Length - len);
             }
             if (1 == ((fspec[1] >> 4) & 0b00000001))
             {
                 byte[] data_item_161 = new byte[2];
                 Array.Copy(data, 0, data_item_161, 0, 2);
-                var result161 = decoder48.tracknumberDecoding(data_item_161);
+                int result161 = decoder48.tracknumberDecoding(data_item_161);
                 Array.Copy(data, 2, data, 0, data.Length - 2);
             }
             if (1 == ((fspec[1] >> 3) & 0b00000001))
@@ -253,7 +251,7 @@ class Program
                 {
                     byte[] data_item_110 = new byte[2];
                     Array.Copy(data, 0, data_item_110, 0, 2);
-                    var result110 = decoder48.decode110(data_item_110);
+                    double result110 = decoder48.measuredheightDecoding(data_item_110);
                     Array.Copy(data, 2, data, 0, data.Length - 2);
                 }
                 if (1 == ((fspec[2] >> 2) & 0b00000001))
