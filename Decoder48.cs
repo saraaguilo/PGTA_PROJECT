@@ -205,6 +205,8 @@ namespace OurClasses
             return this.longitude;
         }
 
+        //DECODE 020
+        //--------------------------------------------------------------
         public string TYPDecoding(byte[] data)
         {
             int typ = (data[0] >> 5) & 0b00000111; //obtenemos los tres primeros bits del array de data
@@ -274,19 +276,6 @@ namespace OurClasses
             return rabDescriptions.ContainsKey(rab) ? rabDescriptions[rab] : "";
         }
 
-        public string FXDecoding(byte[] data)
-        {
-            
-            int fx = (data[0] >> 0) & 0b00000001;
-            Dictionary<int, string> fxDescriptions = new Dictionary<int, string>()
-        {
-        { 0, "End of data item" },
-        { 1, "Extension into next extent" }
-        };
-            return fxDescriptions.ContainsKey(fx) ? fxDescriptions[fx] : "";
-
-        }
-
         public string TSTDecoding(byte[] data)//es un campo opcional
         {
             return this.TST;
@@ -320,7 +309,7 @@ namespace OurClasses
         public string ADSB_EPDecoding(byte[] data)
         {
 
-            int adsb_ep = (data[0] >> 7) & 0b00000001;
+            int adsb_ep = (data[2] >> 7) & 0b00000001;
             Dictionary<int, string> adsb_epDescriptions = new Dictionary<int, string>()
     {
         { 0, "ADSB not populated" },
@@ -332,7 +321,7 @@ namespace OurClasses
         public string ADSB_VALDecoding(byte[] data)
         {
 
-            int adsb_val = (data[0] >> 6) & 0b00000001;
+            int adsb_val = (data[2] >> 6) & 0b00000001;
             Dictionary<int, string> adsb_valDescriptions = new Dictionary<int, string>()
     {
         { 0, "not available" },
@@ -344,7 +333,7 @@ namespace OurClasses
         public string SCN_EPDecoding(byte[] data)
         {
 
-            int scn_ep = (data[0] >> 5) & 0b00000001;
+            int scn_ep = (data[2] >> 5) & 0b00000001;
             Dictionary<int, string> scn_epDescriptions = new Dictionary<int, string>()
     {
         { 0, "SCN not populated" },
@@ -356,7 +345,7 @@ namespace OurClasses
         public string SCN_VALDecoding(byte[] data)
         {
 
-            int scn_val = (data[0] >> 4) & 0b00000001;
+            int scn_val = (data[2] >> 4) & 0b00000001;
             Dictionary<int, string> scn_valDescriptions = new Dictionary<int, string>()
     {
         { 0, "not available" },
@@ -368,7 +357,7 @@ namespace OurClasses
         public string PAI_EPDecoding(byte[] data)
         {
 
-            int pai_ep = (data[0] >> 3) & 0b00000001;
+            int pai_ep = (data[2] >> 3) & 0b00000001;
             Dictionary<int, string> pai_epDescriptions = new Dictionary<int, string>()
     {
         { 0, "PAI not populated" },
@@ -380,7 +369,7 @@ namespace OurClasses
         public string PAI_VALDecoding(byte[] data)
         {
 
-            int pai_val = (data[0] >> 2) & 0b00000001;
+            int pai_val = (data[2] >> 2) & 0b00000001;
             Dictionary<int, string> pai_valDescriptions = new Dictionary<int, string>()
     {
         { 0, "not available" },
@@ -389,6 +378,54 @@ namespace OurClasses
             return pai_valDescriptions.ContainsKey(pai_val) ? pai_valDescriptions[pai_val] : "";
 
         }
+
+        public List<string> decode020(List<byte> data_list)
+        {
+            byte[] data = data_list.ToArray();
+            List<string> decodedData = new List<string>();
+            string TYP = TYPDecoding(data);
+            string SIM = SIMDecoding(data);
+            string RDP = RDPDecoding(data);
+            string SPI = SPIDecoding(data);
+            string RAB = RABDecoding(data); 
+            decodedData.Add(TYP);
+            decodedData.Add(SIM);
+            decodedData.Add(RDP);
+            decodedData.Add(SPI);
+            decodedData.Add(RAB);
+            if (data.Length > 1)
+            {
+                //string TST = TSTDecoding(data);
+                //string ERR = ERRDecoding(data);
+                //string XPP = XPPDecoding(data);
+                //string ME = MEDecoding(data);
+                //string MI = MIDecoding(data);
+                //string FOE_FRID = FOE_FRIDecoding(data);
+                //decodedData.Add(TST);
+                //decodedData.Add(ERR);
+                //decodedData.Add(XPP);
+                //decodedData.Add(ME);
+                //decodedData.Add(MI);
+                //decodedData.Add(FOE_FRID);
+                if (data.Length > 2)
+                {
+                    string ADSB_EP = ADSB_EPDecoding(data);
+                    string ADSB_VAL = ADSB_VALDecoding(data);
+                    string SCN_EP = SCN_EPDecoding(data);
+                    string SCN_VAL = SCN_VALDecoding(data);
+                    string PAI_EP = PAI_EPDecoding(data);
+                    string PAI_VAL = PAI_VALDecoding(data);
+                    decodedData.Add(ADSB_EP);
+                    decodedData.Add(ADSB_VAL);
+                    decodedData.Add(SCN_EP);
+                    decodedData.Add(SCN_VAL);
+                    decodedData.Add(PAI_EP);
+                    decodedData.Add(PAI_VAL);
+                }
+            }
+            return decodedData;
+        }
+        //--------------------------------------------------------------
 
         //DECODE 070
         //-----------------------------------------------------------------
@@ -452,6 +489,7 @@ namespace OurClasses
             return (V, G, L, mode3A);
         }
         //---------------------------------------------------------------
+
         //DECODE 090
         //---------------------------------------------------------------
         //Ahora vamos a decodificar el flight level (binary representation)
@@ -504,7 +542,9 @@ namespace OurClasses
             double FL = FLDecoding(data);
             return (V, G, FL);
         }
+        //---------------------------------------------------------------
 
+        //DECODE 130
         //---------------------------------------------------------------
         //Ahora se decodificará Radar Plot Characteristics
         public string SRLDecoding(byte[] data)
@@ -518,10 +558,12 @@ namespace OurClasses
 
             return srlDescriptions.ContainsKey(srl) ? srlDescriptions[srl] : "";
         }
-        public double SRL2Decoding(byte[] data)
+        public double SRL2Decoding(byte data)
         {
             double resolution = 360.0 / 213.0; //en dgs
-            this.SRL2 = ByteToDoubleDecoding(data, resolution);
+            byte[] data_array = new byte[1];
+            data_array[0] = data;
+            this.SRL2 = ByteToDoubleDecoding(data_array, resolution);
             return this.SRL2;
         }
         public string SSRDecoding(byte[] data)
@@ -535,11 +577,13 @@ namespace OurClasses
 
             return ssrDescriptions.ContainsKey(ssr) ? ssrDescriptions[ssr] : "";
         }
-        public int SSR2Decoding(byte[] data)
+        public double SSR2Decoding(byte data)
         {
             double resolution = 1; //no tiene unidades
-            this.SSR2 = ByteToDoubleDecoding(data, resolution);
-            return this.SSR2;
+            byte[] data_array = new byte[1];
+            data_array[0] = data;
+            double SSR2 = ByteToDoubleDecoding(data_array, resolution);
+            return SSR2;
         }
         public string SAMDecoding(byte[] data)
         {
@@ -551,22 +595,17 @@ namespace OurClasses
         };
             return samDescriptions.ContainsKey(sam) ? samDescriptions[sam] : "";
         }
-        public double SAM2Decoding(byte[] data)
+        public double SAM2Decoding(byte data)
         {
             double resolution = 1; // dBm
-            double bytesValue = 0;
-            for (int i = 0; i < data.Length; i++)
-            {
-                bytesValue *= 256; 
-                bytesValue += data[i];
-            }
-            if ((data[0] & 128) != 0)
+            int data_int = new int();
+            if ((data & 128) != 0)
             {
                 // Conversión de dos complementos para valores negativos
-                bytesValue = (ushort)~(bytesValue - 1);
-                bytesValue *= -1;
+                data_int = ~(data - 1);
+                data_int *= -1;
             }
-            this.SAM2 = bytesValue * resolution;
+            this.SAM2 = data * resolution;
             return this.SAM2;
         }
         public string PRLDecoding(byte[] data)
@@ -579,10 +618,12 @@ namespace OurClasses
         };
             return prlDescriptions.ContainsKey(prl) ? prlDescriptions[prl] : "";
         }
-        public double PRL2Decoding(byte[] data)
+        public double PRL2Decoding(byte data)
         {
             double resolution = 360.0 / 213.0; //en dgs
-            this.PRL2 = ByteToDoubleDecoding(data, resolution);
+            byte[] data_array = new byte[1];
+            data_array[0] = data;
+            this.PRL2 = ByteToDoubleDecoding(data_array, resolution);
             return this.PRL2;
         }
         public string PAMDecoding(byte[] data)
@@ -595,22 +636,17 @@ namespace OurClasses
         };
             return pamDescriptions.ContainsKey(pam) ? pamDescriptions[pam] : "";
         }
-        public double PAM2Decoding(byte[] data)
+        public double PAM2Decoding(byte data)
         {
             double resolution = 1; // dBm
-            double bytesValue = 0;
-            for (int i = 0; i < data.Length; i++)
-            {
-                bytesValue *= 256;
-                bytesValue += data[i];
-            }
-            if ((data[0] & 128) != 0)
+            int data_int = new int();
+            if ((data & 128) != 0)
             {
                 // Hacemos la conversión de dos complementos para valores negativos
-                bytesValue = (ushort)~(bytesValue - 1);
-                bytesValue *= -1;
+                data_int = ~(data - 1);
+                data_int *= -1;
             }
-            this.PAM2 = bytesValue * resolution;
+            this.PAM2 = data_int * resolution;
             return this.PAM2;
         }
         public string RPDDecoding(byte[] data)
@@ -623,22 +659,17 @@ namespace OurClasses
         };
             return rpdDescriptions.ContainsKey(rpd) ? rpdDescriptions[rpd] : "";
         }
-        public double RPD2Decoding(byte[] data)
+        public double RPD2Decoding(byte data)
         {
             double resolution = 1 / 256; // NM
-            double bytesValue = 0;
-            for (int i = 0; i < data.Length; i++)
-            {
-                bytesValue *= 256;
-                bytesValue += data[i];
-            }
-            if ((data[0] & 128) != 0)
+            double data_int = 0;
+            if ((data & 128) != 0)
             {
                 // Hacemos la conversión de dos complementos para valores negativos
-                bytesValue = (ushort)~(bytesValue - 1);
-                bytesValue *= -1;
+                data_int = ~(data - 1);
+                data_int *= -1;
             }
-            this.RPD2 = bytesValue * resolution;
+            this.RPD2 = data_int * resolution;
             return this.RPD2;
         }
         public string APDDecoding(byte[] data)
@@ -651,24 +682,68 @@ namespace OurClasses
         };
             return apdDescriptions.ContainsKey(apd) ? apdDescriptions[apd] : "";
         }
-        public double APD2Decoding(byte[] data)
+        public double APD2Decoding(byte data)
         {
             double resolution = 360.0 / Math.Pow(2, 14); // dgs
-            double bytesValue = 0;
-            for (int i = 0; i < data.Length; i++)
-            {
-                bytesValue *= 256;
-                bytesValue += data[i];
-            }
-            if ((data[0] & 128) != 0)
+            double data_int = 0;
+            if ((data & 128) != 0)
             {
                 // Hacemos la conversión de dos complementos para valores negativos
-                bytesValue = (ushort)~(bytesValue - 1);
-                bytesValue *= -1;
+                data_int = ~(data - 1);
+                data_int *= -1;
             }
-            this.APD2 = bytesValue * resolution;
+            this.APD2 = data_int * resolution;
             return this.APD2;
         }
+
+        public List<double> decode130(byte[] data)
+        {
+            List<double> decodedData = new List<double>();
+            int byteIndex = 0;
+            for (int i = 1; i < 8; i++)
+            {
+                if (((data[0] >> i) & 0b00000001) == 1)
+                {
+                    byteIndex += 1;
+
+                    switch (i)
+                    {
+                        case 1:
+                            double APD = APD2Decoding(data[byteIndex]);
+                            decodedData.Add(APD);
+                            break;
+                        case 2:
+                            double RPD = RPD2Decoding(data[byteIndex]);
+                            decodedData.Add(RPD);
+                            break;
+                        case 3:
+                            double PAM = PAM2Decoding(data[byteIndex]);
+                            decodedData.Add(PAM);
+                            break;
+                        case 4:
+                            double PRL = PRL2Decoding(data[byteIndex]);
+                            decodedData.Add(PRL);
+                            break;
+                        case 5:
+                            double SAM = SAM2Decoding(data[byteIndex]);
+                            decodedData.Add(SAM);
+                            break;
+                        case 6:
+                            double SSR = SSR2Decoding(data[byteIndex]);
+                            decodedData.Add(SSR);
+                            break;
+                        case 7:
+                            double SRL = SRL2Decoding(data[byteIndex]);
+                            decodedData.Add(SRL);
+                            break;
+                    }
+                }
+            }
+            return decodedData;
+        }
+        //---------------------------------------------------------------
+
+
         public int[] fullModeSDecoding(byte[] data)
         {
             int bdsByte = data[7];
@@ -1176,6 +1251,8 @@ namespace OurClasses
         }
         //----------------------------------------------------------------
 
+        // DECODE 170
+        //----------------------------------------------------------------
         public string CNFDecoding(byte[] data)
         {
             int cnf = (data[0] >> 7) & 0b00000001;
@@ -1253,6 +1330,38 @@ namespace OurClasses
             return this.TCC;
 
         }
+        public List<string> decode170(List<byte> data_list)
+        {
+            byte[] data = data_list.ToArray();
+            List<string> decodedData = new List<string>();
+            string CNF = CNFDecoding(data);
+            string RAD = RADDecoding(data);
+            string DOU = DOUDecoding(data);
+            string MAH = MAHDecoding(data);
+            string CDM = CDMDecoding(data);
+            decodedData.Add(CNF);
+            decodedData.Add(RAD);
+            decodedData.Add(DOU);
+            decodedData.Add(MAH);
+            decodedData.Add(CDM);
+            if (data.Length > 1)
+            {
+                //string TST = TSTDecoding(data);
+                //string ERR = ERRDecoding(data);
+                //string XPP = XPPDecoding(data);
+                //string ME = MEDecoding(data);
+                //string MI = MIDecoding(data);
+                //string FOE_FRID = FOE_FRIDecoding(data);
+                //decodedData.Add(TST);
+                //decodedData.Add(ERR);
+                //decodedData.Add(XPP);
+                //decodedData.Add(ME);
+                //decodedData.Add(MI);
+                //decodedData.Add(FOE_FRID);
+            }
+            return decodedData;
+        }
+        //----------------------------------------------------------------
 
         // DECODE 110
         //----------------------------------------------------------------

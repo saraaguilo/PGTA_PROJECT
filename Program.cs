@@ -115,7 +115,7 @@ class Program
         }
         if (1 == ((fspec[0] >> 5) & 0b00000001))
         {
-            List<byte> data_item_020 = new List<byte>;
+            List<byte> data_item_020 = new List<byte>();
             int i = 0;
             while (i != -1)
             {
@@ -123,7 +123,7 @@ class Program
                 if ((data[i] & 0b00000001) == 1) { i++; }
                 else { i = -1; }
             }
-            var result020 = decoder48.decode020(data_item_020);
+            List<string> result020 = decoder48.decode020(data_item_020);
             Array.Copy(data, data_item_020.Count, data, 0, data.Length - data_item_020.Count);
         }
         if (1 == ((fspec[0] >> 4) & 0b00000001))
@@ -160,7 +160,7 @@ class Program
             }
             byte[] data_item_130 = new byte[count];
             Array.Copy(data, 0, data_item_130, 0, count);
-            var result130 = decoder48.decode090(data_item_130);
+            List<double> result130 = decoder48.decode130(data_item_130);
             Array.Copy(data, count, data, 0, data.Length - count);
         }
         if (1 == ((fspec[0] & 0b00000001)))
