@@ -23,17 +23,6 @@ class Program
 
             byte[] data = Data(Messages[i], fspec.Count);
 
-            if (i == 0)
-            {
-                Console.WriteLine(string.Join(",", fspec));
-
-                Console.WriteLine(string.Join(",", data));
-
-                Console.WriteLine(string.Join(",", Messages[i]));
-            }
-
-            break;
-
             classifyparams(fspec, data);
         }
     }
@@ -150,7 +139,7 @@ class Program
         }
         if (1 == ((fspec[0] >> 1) & 0b00000001))
         {
-            int count = 0;
+            int count = 1;
             for (int i = 0; i < 8; i++)
             {
                 if ((data[0] & (1 << i)) != 0)
@@ -184,7 +173,7 @@ class Program
                 int len = data[0] * 8 + 1;
                 byte[] data_item_250 = new byte[len];
                 Array.Copy(data, 0, data_item_250, 0, len);
-                var result250 = decoder48.decode250(data_item_250);
+                List<object> result250 = decoder48.decode250(data_item_250);
                 Array.Copy(data, len, data, 0, data.Length - len);
             }
             if (1 == ((fspec[1] >> 4) & 0b00000001))
@@ -210,7 +199,7 @@ class Program
             }
             if (1 == ((fspec[1] >> 1) & 0b00000001))
             {
-                List<byte> data_item_170 = new List<byte>;
+                List<byte> data_item_170 = new List<byte>();
                 int i = 0;
                 while (i != -1)
                 {
@@ -229,7 +218,7 @@ class Program
                 }
                 if (1 == ((fspec[2] >> 6) & 0b00000001))
                 {
-                    List<byte> data_item_030 = new List<byte>;
+                    List<byte> data_item_030 = new List<byte>();
                     int i = 0;
                     while (i != -1)
                     {
@@ -256,7 +245,7 @@ class Program
                 }
                 if (1 == ((fspec[2] >> 2) & 0b00000001))
                 {
-                    List<byte> data_item_120 = new List<byte>;
+                    List<byte> data_item_120 = new List<byte>();
                     int i = 0;
                     while (i != -1)
                     {
@@ -294,14 +283,6 @@ class Program
                     if (1 == ((fspec[3] >> 3) & 0b00000001))
                     {
                         Array.Copy(data, 2, data, 0, data.Length - 2);
-                    }
-                    if (1 == ((fspec[3] >> 2) & 0b00000001))
-                    {
-
-                    }
-                    if (1 == ((fspec[3] >> 1) & 0b00000001))
-                    {
-
                     }
                 }
             }

@@ -54,18 +54,15 @@ namespace OurClasses
         public string PAM { get; set; }
         public string RPD { get; set; }
         public string APD { get; set; }
-        public double SRL2 { get; set; };
-        public int SRR2 { get; set; };
-        public double SAM2 { get; set; };
-        public double PRL2 { get; set; };
-        public double PAM2 { get; set; };
-        public double RPD2 { get; set; };
-        public double APD2 { get; set; };
+        public double SRL2 { get; set; }
+        public int SRR2 { get; set; }
+        public double SAM2 { get; set; }
+        public double PRL2 { get; set; }
+        public double PAM2 { get; set; }
+        public double RPD2 { get; set; }
+        public double APD2 { get; set; }
 
-        public List<int> fullModeS { get; set; };//mirar-ho bé
-        public BDSCode4 modeBDS4 { get; set; }
-        public BDSCode5 modeBDS5 { get; set; }
-        public BDSCode6 modeBDS6 { get; set; }
+        public List<int> fullModeS { get; set; }//mirar-ho bé
 
         public int MCPstatus { get; set; }
         public double MCPalt { get; set; }
@@ -123,7 +120,7 @@ namespace OurClasses
         public string SUP { get; set; }
         public string TCC { get; set; }
 
-        public double measuredheight { get; set; };
+        public double measuredheight { get; set; }
 
         public string COM { get; set; }
         public string STAT { get; set; }
@@ -134,8 +131,8 @@ namespace OurClasses
         public string B1A { get; set; }
         public string B1B { get; set; }
 
-        public Coordinates RadarCoordinates { get; private set; }
-        public GeoUtils GeoUtils { get; private set; } = new GeoUtils();
+        //public Coordinates RadarCoordinates { get; private set; }
+        //public GeoUtils GeoUtils { get; private set; } = new GeoUtils();
 
 
         //DECODE 140
@@ -163,7 +160,7 @@ namespace OurClasses
             return bytesValue * resolution;
         }
         //---------------------------------------------------------------
-
+        /*
         public double latitudeDecoding(double cooR, double cooTheta, double FL)
         {
             int Rt = 6370000;
@@ -204,7 +201,7 @@ namespace OurClasses
             this.longitude = geodesicWGS84.Lon * (180.0 / Math.PI);
             return this.longitude;
         }
-
+        */
         //DECODE 020
         //--------------------------------------------------------------
         public string TYPDecoding(byte[] data)
@@ -278,33 +275,71 @@ namespace OurClasses
 
         public string TSTDecoding(byte[] data)//es un campo opcional
         {
-            return this.TST;
+            int tst = (data[1] >> 7) & 0b00000001;
+            Dictionary<int, string> tstDescriptions = new Dictionary<int, string>()
+        {
+        { 0, "Real target report" },
+        { 1, "Test target report" }
+        };
 
+            return tstDescriptions.ContainsKey(tst) ? tstDescriptions[tst] : "";
         }
         public string ERRDecoding(byte[] data)//es un campo opcional
         {
-            return this.ERR;
+            int err = (data[1] >> 6) & 0b00000001;
+            Dictionary<int, string> errDescriptions = new Dictionary<int, string>()
+        {
+        { 0, "No Extended Range" },
+        { 1, "Extended Range present" }
+        };
 
+            return errDescriptions.ContainsKey(err) ? errDescriptions[err] : "";
         }
         public string XPPDecoding(byte[] data)//es un campo opcional
         {
-            return this.XPP;
+            int xpp = (data[1] >> 5) & 0b00000001;
+            Dictionary<int, string> xppDescriptions = new Dictionary<int, string>()
+        {
+        { 0, "No X-Pulse present" },
+        { 1, "X-Pulse present" }
+        };
 
+            return xppDescriptions.ContainsKey(xpp) ? xppDescriptions[xpp] : "";
         }
         public string MEDecoding(byte[] data)//es un campo opcional
         {
-            return this.ME;
+            int me = (data[1] >> 4) & 0b00000001;
+            Dictionary<int, string> meDescriptions = new Dictionary<int, string>()
+        {
+        { 0, "No military emergency" },
+        { 1, "Military emergency" }
+        };
+
+            return meDescriptions.ContainsKey(me) ? meDescriptions[me] : "";
 
         }
         public string MIDecoding(byte[] data)//es un campo opcional
         {
-            return this.MI;
+            int mi = (data[1] >> 3) & 0b00000001;
+            Dictionary<int, string> miDescriptions = new Dictionary<int, string>()
+        {
+        { 0, "No military identification" },
+        { 1, "Military identification" }
+        };
 
+            return miDescriptions.ContainsKey(mi) ? miDescriptions[mi] : "";
         }
         public string FOE_FRIDecoding(byte[] data)//es un campo opcional
         {
-            return this.FOE_FRI;
-
+            int foe_fri = (data[1] >> 1) & 0b00000011;
+            Dictionary<int, string> foe_friDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "No Mode 4 interrogation" },
+            { 1, "Friendly target" },
+            { 2, "Unknown target" },
+            { 3, "No reply" }
+        };
+            return foe_friDescriptions.ContainsKey(foe_fri) ? foe_friDescriptions[foe_fri] : "";
         }
         public string ADSB_EPDecoding(byte[] data)
         {
@@ -395,18 +430,18 @@ namespace OurClasses
             decodedData.Add(RAB);
             if (data.Length > 1)
             {
-                //string TST = TSTDecoding(data);
-                //string ERR = ERRDecoding(data);
-                //string XPP = XPPDecoding(data);
-                //string ME = MEDecoding(data);
-                //string MI = MIDecoding(data);
-                //string FOE_FRID = FOE_FRIDecoding(data);
-                //decodedData.Add(TST);
-                //decodedData.Add(ERR);
-                //decodedData.Add(XPP);
-                //decodedData.Add(ME);
-                //decodedData.Add(MI);
-                //decodedData.Add(FOE_FRID);
+                string TST = TSTDecoding(data);
+                string ERR = ERRDecoding(data);
+                string XPP = XPPDecoding(data);
+                string ME = MEDecoding(data);
+                string MI = MIDecoding(data);
+                string FOE_FRID = FOE_FRIDecoding(data);
+                decodedData.Add(TST);
+                decodedData.Add(ERR);
+                decodedData.Add(XPP);
+                decodedData.Add(ME);
+                decodedData.Add(MI);
+                decodedData.Add(FOE_FRID);
                 if (data.Length > 2)
                 {
                     string ADSB_EP = ADSB_EPDecoding(data);
@@ -743,16 +778,18 @@ namespace OurClasses
         }
         //---------------------------------------------------------------
 
-
+        //DECODE 250
+        //---------------------------------------------------------------
         public int[] fullModeSDecoding(byte[] data)
         {
             int bdsByte = data[7];
 
-            int bds1 = (bdsByte & 0xF0) >> 4; // Entrada
-            int bds2 = bdsByte & 0x0F;        // Salida
+            int bds1 = (bdsByte & 0xF0) >> 4; 
+            int bds2 = bdsByte & 0x0F;        
 
             return new int[] { bds1, bds2 };
         }
+        //Mode 4.0
         public int MCPStatusDecoding(byte[] data)
         {
             int mcpstatus = (data[0] >> 7) & 0b00000001;
@@ -773,18 +810,18 @@ namespace OurClasses
         }
         public int FMstatusDecoding(byte[] data)
         {
-            int fmstatus = (data[0] >> 2) & 0b00000001;
+            int fmstatus = (data[1] >> 2) & 0b00000001;
             this.FMstatus = fmstatus;
             return this.FMstatus;
 
         }
         public double FMaltDecoding(byte[] data)
         {
-            byte fmalt1 = (byte)((data[0] >> 0) & 0b00000011);
-            byte fmalt2 = (byte)((data[1] >> 0) & 0b11111111);
-            byte fmalt3 = (byte)((data[2] >> 6) & 0b00000011);
+            byte fmalt1 = (byte)((data[1] >> 0) & 0b00000011);
+            byte fmalt2 = (byte)((data[2] >> 0) & 0b11111111);
+            byte fmalt3 = (byte)((data[3] >> 6) & 0b00000011);
 
-            int combinedValue = (fmalt1 << 16) | (fmalt2 << 6) | fmalt3;
+            int combinedValue = (fmalt1 << 10) | (fmalt2 << 2) | fmalt3;
 
             double resolution = 16; // Resolución en ft
             double fmAltitude = combinedValue * resolution;
@@ -794,14 +831,14 @@ namespace OurClasses
         }
         public int BPstatusDecoding(byte[] data)
         {
-            int bpstatus = (data[0] >> 5) & 0b00000001;
+            int bpstatus = (data[3] >> 5) & 0b00000001;
             this.BPstatus = bpstatus;
             return this.BPstatus;
         }
         public double BPpresDecoding(byte[] data)
         {
-            byte bppres1 = (byte)((data[0] >> 0) & 0b00011111);
-            byte bppres2 = (byte)((data[1] >> 1) & 0b01111111);
+            byte bppres1 = (byte)((data[3] >> 0) & 0b00011111);
+            byte bppres2 = (byte)((data[4] >> 1) & 0b01111111);
 
             int combinedValue = (bppres1 << 7) | bppres2;
 
@@ -813,37 +850,37 @@ namespace OurClasses
         }
         public int modeStatDecoding(byte[] data)
         {
-            int modeStat = (data[0] >> 0) & 0b00000001;
+            int modeStat = (data[5] >> 0) & 0b00000001;
             this.modeStat = modeStat;
-            return this.modestatus;
+            return this.modeStat;
         }
         public int VNAVDecoding(byte[] data)
         {
-            int vnav = (data[0] >> 7) & 0b00000001;
+            int vnav = (data[6] >> 7) & 0b00000001;
             this.VNAV = vnav;
             return this.VNAV;
         }
         public int ALTholdDecoding(byte[] data)
         {
-            int ALThold = (data[0] >> 6) & 0b00000001;
+            int ALThold = (data[6] >> 6) & 0b00000001;
             this.ALThold = ALThold;
             return this.ALThold;
         }
         public int AppDecoding(byte[] data)
         {
-            int App = (data[0] >> 5) & 0b00000001;
+            int App = (data[6] >> 5) & 0b00000001;
             this.App = App;
             return this.App;
         }
         public int targetalt_statusDecoding(byte[] data)
         {
-            int targetalt_status = (data[0] >> 2) & 0b00000001;
+            int targetalt_status = (data[6] >> 2) & 0b00000001;
             this.targetalt_status = targetalt_status;
             return this.targetalt_status;
         }
         public string targetalt_sourceDecoding(byte[] data)
         {
-            int targetalt_source = (data[0] >> 0) & 0b00000011;
+            int targetalt_source = (data[6] >> 0) & 0b00000011;
             Dictionary<int, string> targetalt_sourceDescriptions = new Dictionary<int, string>()
         {
             { 0, "Unknown" },
@@ -853,6 +890,8 @@ namespace OurClasses
         };
             return targetalt_sourceDescriptions.ContainsKey(targetalt_source) ? targetalt_sourceDescriptions[targetalt_source] : "";
         }
+
+        //Mode 5.0
         public int RAstatusDecoding(byte[] data)
         {
             int RAstatus = (data[0] >> 7) & 0b00000001;
@@ -885,15 +924,15 @@ namespace OurClasses
         }
         public int TTAstatusDecoding(byte[] data)
         {
-            int TTAstatus = (data[0] >> 4) & 0b00000001;
+            int TTAstatus = (data[1] >> 4) & 0b00000001;
             this.TTAstatus = TTAstatus;
             return this.TTAstatus;
         }
         public double TTADecoding(byte[] data)
         {
-            byte TTA1 = (byte)((data[0] >> 0) & 0b00001111);
-            byte TTA2 = (byte)((data[1] >> 1) & 0b01111111);
-            byte signByte = (byte)((data[0] >> 3) & 0b00000001);
+            byte TTA1 = (byte)((data[1] >> 0) & 0b00001111);
+            byte TTA2 = (byte)((data[2] >> 1) & 0b01111111);
+            byte signByte = (byte)((data[1] >> 3) & 0b00000001);
             
             int combinedValue;
             if (signByte == 0)
@@ -914,15 +953,15 @@ namespace OurClasses
         }
         public int GSstatusDecoding(byte[] data)
         {
-            int GSstatus = (data[0] >> 0) & 0b00000001;
+            int GSstatus = (data[2] >> 0) & 0b00000001;
             this.GSstatus = GSstatus;
             return this.GSstatus;
 
         }
         public double GSDecoding(byte[] data)
         {
-            byte gs1 = (byte)((data[0] >> 0) & 0b11111111);
-            byte gs2 = (byte)((data[1] >> 6) & 0b00000011);
+            byte gs1 = (byte)((data[3] >> 0) & 0b11111111);
+            byte gs2 = (byte)((data[4] >> 6) & 0b00000011);
 
             int combinedValue = (gs1 << 2) | gs2;
 
@@ -933,16 +972,16 @@ namespace OurClasses
         }
         public int TARstatusDecoding(byte[] data)
         {
-            int TARstatus = (data[0] >> 5) & 0b00000001;
+            int TARstatus = (data[4] >> 5) & 0b00000001;
             this.TARstatus = TARstatus;
             return this.TARstatus;
 
         }
         public double TARDecoding(byte[] data)
         {
-            byte TAR1 = (byte)((data[0] >> 0) & 0b00011111);
-            byte TAR2 = (byte)((data[1] >> 3) & 0b00011111);
-            byte signByte = (byte)((data[0] >> 4) & 0b00000001);
+            byte TAR1 = (byte)((data[4] >> 0) & 0b00011111);
+            byte TAR2 = (byte)((data[5] >> 3) & 0b00011111);
+            byte signByte = (byte)((data[4] >> 4) & 0b00000001);
 
             int combinedValue;
             if (signByte == 0)
@@ -963,15 +1002,15 @@ namespace OurClasses
         }
         public int TASstatusDecoding(byte[] data)
         {
-            int TASstatus = (data[0] >> 2) & 0b00000001;
+            int TASstatus = (data[5] >> 2) & 0b00000001;
             this.TASstatus = TASstatus;
             return this.TASstatus;
 
         }
         public double TASDecoding(byte[] data)
         {
-            byte tas1 = (byte)((data[0] >> 0) & 0b00000011);
-            byte tas2 = (byte)((data[1] >> 0) & 0b11111111);
+            byte tas1 = (byte)((data[5] >> 0) & 0b00000011);
+            byte tas2 = (byte)((data[6] >> 0) & 0b11111111);
 
             int combinedValue = (tas1 << 8) | tas2;
 
@@ -981,6 +1020,8 @@ namespace OurClasses
             return this.TAS;
 
         }
+
+        //MODE 6.0
         public int HDGstatusDecoding(byte[] data)
         {
             int HDGstatus = (data[0] >> 7) & 0b00000001;
@@ -1014,15 +1055,15 @@ namespace OurClasses
         }
         public int IASstatusDecoding(byte[] data)
         {
-            int IASstatus = (data[0] >> 3) & 0b00000001;
+            int IASstatus = (data[1] >> 3) & 0b00000001;
             this.IASstatus = IASstatus;
             return this.IASstatus;
 
         }
         public double IASDecoding(byte[] data)
         {
-            byte ias1 = (byte)((data[0] >> 0) & 0b00000111);
-            byte ias2 = (byte)((data[1] >> 1) & 0b01111111);
+            byte ias1 = (byte)((data[1] >> 0) & 0b00000111);
+            byte ias2 = (byte)((data[2] >> 1) & 0b01111111);
 
             int combinedValue = (ias1 << 7) | ias2;
 
@@ -1033,15 +1074,15 @@ namespace OurClasses
         }
         public int MACHstatusDecoding(byte[] data)
         {
-            int MACHstatus = (data[0] >> 0) & 0b00000001;
+            int MACHstatus = (data[2] >> 0) & 0b00000001;
             this.MACHstatus = MACHstatus;
             return this.MACHstatus;
 
         }
         public double MACHDecoding(byte[] data)
         {
-            byte mach1 = (byte)((data[0] >> 0) & 0b11111111);
-            byte mach2 = (byte)((data[1] >> 6) & 0b00000011);
+            byte mach1 = (byte)((data[3] >> 0) & 0b11111111);
+            byte mach2 = (byte)((data[4] >> 6) & 0b00000011);
 
             int combinedValue = (mach1 << 2) | mach2;
 
@@ -1052,16 +1093,16 @@ namespace OurClasses
         }
         public int BARstatusDecoding(byte[] data)
         {
-            int BARstatus = (data[0] >> 5) & 0b00000001;
+            int BARstatus = (data[4] >> 5) & 0b00000001;
             this.BARstatus = BARstatus;
             return this.BARstatus;
 
         }
         public double BARDecoding(byte[] data)
         {
-            byte BAR1 = (byte)((data[0] >> 0) & 0b00011111);
-            byte BAR2 = (byte)((data[1] >> 3) & 0b00011111);
-            byte signByte = (byte)((data[0] >> 4) & 0b00000001);
+            byte BAR1 = (byte)((data[4] >> 0) & 0b00011111);
+            byte BAR2 = (byte)((data[5] >> 3) & 0b00011111);
+            byte signByte = (byte)((data[4] >> 4) & 0b00000001);
 
             int combinedValue;
             if (signByte == 0)
@@ -1082,15 +1123,15 @@ namespace OurClasses
         }
         public int IVVstatusDecoding(byte[] data)
         {
-            int IVVstatus = (data[0] >> 2) & 0b00000001;
+            int IVVstatus = (data[5] >> 2) & 0b00000001;
             this.IVVstatus = IVVstatus;
             return this.IVVstatus;
         }
         public double IVVDecoding(byte[] data)
         {
-            byte IVV1 = (byte)((data[0] >> 0) & 0b00000011);
-            byte IVV2 = (byte)((data[1] >> 0) & 0b11111111);
-            byte signByte = (byte)((data[0] >> 1) & 0b00000001);
+            byte IVV1 = (byte)((data[5] >> 0) & 0b00000011);
+            byte IVV2 = (byte)((data[6] >> 0) & 0b11111111);
+            byte signByte = (byte)((data[5] >> 1) & 0b00000001);
 
             int combinedValue;
             if (signByte == 0)
@@ -1109,6 +1150,93 @@ namespace OurClasses
             this.IVV = IVV;
             return this.IVV;
         }
+
+        public List<object> decode250(byte[] data)
+        {
+            int REP = data[0];
+            byte[] data_mode = new byte[8];
+            List<object> decodedData = new List<object>();
+            for (int i = 0; i < REP; i++)
+            {
+                Array.Copy(data, 8*i+1, data_mode, 0, 8);
+                int[] BDS_address = fullModeSDecoding(data_mode);
+                if (BDS_address[0] == 4 && BDS_address[1] == 0)
+                {
+                    int MPCStatus = MCPStatusDecoding(data_mode);
+                    double MPCPalt = MCPaltDecoding(data_mode);
+                    int FMstatus = FMstatusDecoding(data_mode);
+                    double FMalt = FMaltDecoding(data_mode);
+                    int BPstatus = BPstatusDecoding(data_mode);
+                    double BPpres = BPpresDecoding(data_mode);
+                    int modeStat = modeStatDecoding(data_mode);
+                    int VNAV = VNAVDecoding(data_mode);
+                    int ALThold = ALTholdDecoding(data_mode);
+                    int App = AppDecoding(data_mode);
+                    int targetalt_status = targetalt_statusDecoding(data_mode);
+                    string targetalt_source = targetalt_sourceDecoding(data_mode);
+                    decodedData.Add(MPCStatus);
+                    decodedData.Add(MPCPalt);
+                    decodedData.Add(FMstatus);
+                    decodedData.Add(FMalt);
+                    decodedData.Add(BPstatus);
+                    decodedData.Add(BPpres);
+                    decodedData.Add(modeStat);
+                    decodedData.Add(VNAV);
+                    decodedData.Add(ALThold);
+                    decodedData.Add(App);
+                    decodedData.Add(targetalt_status);
+                    decodedData.Add(targetalt_source);
+                }
+                if (BDS_address[0] == 5 && BDS_address[1] == 0)
+                {
+                    int RAstatus = RAstatusDecoding(data_mode);
+                    double RA = RADecoding(data_mode);
+                    int TTAstatus = TTAstatusDecoding(data_mode);
+                    double TTA = TTADecoding(data_mode);
+                    int GSstatus = GSstatusDecoding(data_mode);
+                    double GS = GSDecoding(data_mode);
+                    int TARstatus = TARstatusDecoding(data_mode);
+                    double TAR = TARDecoding(data_mode);
+                    int TASstatus = TASstatusDecoding(data_mode);
+                    double TAS = TASDecoding(data_mode);
+                    decodedData.Add(RAstatus);
+                    decodedData.Add(RA);
+                    decodedData.Add(TTAstatus);
+                    decodedData.Add(TTA);
+                    decodedData.Add(GSstatus);
+                    decodedData.Add(GS);
+                    decodedData.Add(TARstatus);
+                    decodedData.Add(TAR);
+                    decodedData.Add(TASstatus);
+                    decodedData.Add(TAS);
+                }
+                if (BDS_address[0] == 6 && BDS_address[1] == 0)
+                {
+                    int HDGstatus = HDGstatusDecoding(data_mode);
+                    double HDG = HDGDecoding(data_mode);
+                    int IASstatus = IASstatusDecoding(data_mode);
+                    double IAS = IASDecoding(data_mode);
+                    int MACHstatus = MACHstatusDecoding(data_mode);
+                    double MACH = MACHDecoding(data_mode);
+                    int BARstatus = BARstatusDecoding(data_mode);
+                    double BAR = BARDecoding(data_mode);
+                    int IVVstatus = IVVstatusDecoding(data_mode);
+                    double IVV = IVVDecoding(data_mode);
+                    decodedData.Add(HDGstatus);
+                    decodedData.Add(HDG);
+                    decodedData.Add(IASstatus);
+                    decodedData.Add(MACHstatus);
+                    decodedData.Add(MACH);
+                    decodedData.Add(BARstatus);
+                    decodedData.Add(BAR);
+                    decodedData.Add(IVVstatus);
+                    decodedData.Add(IVV);
+                }
+            }
+            return decodedData;
+        }
+
+        //---------------------------------------------------------------
 
         //DECODE 161
         //----------------------------------------------------------------
@@ -1312,23 +1440,43 @@ namespace OurClasses
         }
         public string TREDecoding(byte[] data)
         {
-            return this.TRE;
-
+            int tre = (data[1] >> 7) & 0b00000001;
+            Dictionary<int, string> treDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "Track still alive" },
+            { 1, "End of track lifetime(last report for this track)" }
+        };
+            return treDescriptions.ContainsKey(tre) ? treDescriptions[tre] : "";
         }
         public string GHODecoding(byte[] data)
         {
-            return this.GHO;
-
+            int gho = (data[1] >> 6) & 0b00000001;
+            Dictionary<int, string> ghoDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "True target track." },
+            { 1, "Ghost target track." }
+        };
+            return ghoDescriptions.ContainsKey(gho) ? ghoDescriptions[gho] : "";
         }
         public string SUPDecoding(byte[] data)
         {
-            return this.SUP;
-
+            int sup = (data[1] >> 5) & 0b00000001;
+            Dictionary<int, string> supDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "no" },
+            { 1, "yes" }
+        };
+            return supDescriptions.ContainsKey(sup) ? supDescriptions[sup] : "";
         }
         public string TCCDecoding(byte[] data)
         {
-            return this.TCC;
-
+            int tcc = (data[1] >> 4) & 0b00000001;
+            Dictionary<int, string> tccDescriptions = new Dictionary<int, string>()
+        {
+            { 0, "Tracking performed in so-called Radar Plane, i.e. neither slant range correction nor stereographical projection was applied." },
+            { 1, "Slant range correction and a suitable projection technique are used to track in a 2D.reference plane, tangential to the earth model at the Radar Site co-ordinates." }
+        };
+            return tccDescriptions.ContainsKey(tcc) ? tccDescriptions[tcc] : "";
         }
         public List<string> decode170(List<byte> data_list)
         {
@@ -1346,18 +1494,14 @@ namespace OurClasses
             decodedData.Add(CDM);
             if (data.Length > 1)
             {
-                //string TST = TSTDecoding(data);
-                //string ERR = ERRDecoding(data);
-                //string XPP = XPPDecoding(data);
-                //string ME = MEDecoding(data);
-                //string MI = MIDecoding(data);
-                //string FOE_FRID = FOE_FRIDecoding(data);
-                //decodedData.Add(TST);
-                //decodedData.Add(ERR);
-                //decodedData.Add(XPP);
-                //decodedData.Add(ME);
-                //decodedData.Add(MI);
-                //decodedData.Add(FOE_FRID);
+                string TRE = TREDecoding(data);
+                string GHO = GHODecoding(data);
+                string SUP = SUPDecoding(data);
+                string TCC = TCCDecoding(data);
+                decodedData.Add(TRE);
+                decodedData.Add(GHO);
+                decodedData.Add(SUP);
+                decodedData.Add(TCC);
             }
             return decodedData;
         }
