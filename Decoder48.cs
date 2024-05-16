@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Messaging;
+using System.Data;
 
 
 namespace OurClasses
@@ -435,13 +436,13 @@ namespace OurClasses
                 string XPP = XPPDecoding(data);
                 string ME = MEDecoding(data);
                 string MI = MIDecoding(data);
-                string FOE_FRID = FOE_FRIDecoding(data);
+                string FOE_FRI = FOE_FRIDecoding(data);
                 decodedData.Add(TST);
                 decodedData.Add(ERR);
                 decodedData.Add(XPP);
                 decodedData.Add(ME);
                 decodedData.Add(MI);
-                decodedData.Add(FOE_FRID);
+                decodedData.Add(FOE_FRI);
                 if (data.Length > 2)
                 {
                     string ADSB_EP = ADSB_EPDecoding(data);
@@ -562,6 +563,7 @@ namespace OurClasses
             if (isNegative)
             {
                 FLBits = (~FLBits + 1) & 0x3FFF;
+                FLBits *= -1;
             }
 
             double flightLevel = FLBits * resolutionLSB;
@@ -595,7 +597,7 @@ namespace OurClasses
         }
         public double SRL2Decoding(byte data)
         {
-            double resolution = 360.0 / 213.0; //en dgs
+            double resolution = 360.0 / Math.Pow(2, 13); //en dgs
             byte[] data_array = new byte[1];
             data_array[0] = data;
             this.SRL2 = ByteToDoubleDecoding(data_array, resolution);
@@ -637,10 +639,10 @@ namespace OurClasses
             if ((data & 128) != 0)
             {
                 // Conversión de dos complementos para valores negativos
-                data_int = ~(data - 1);
+                data_int = (~data + 1) & 0x7F;
                 data_int *= -1;
             }
-            this.SAM2 = data * resolution;
+            this.SAM2 = data_int * resolution;
             return this.SAM2;
         }
         public string PRLDecoding(byte[] data)
@@ -655,7 +657,7 @@ namespace OurClasses
         }
         public double PRL2Decoding(byte data)
         {
-            double resolution = 360.0 / 213.0; //en dgs
+            double resolution = 360.0 / Math.Pow(2,13); //en dgs
             byte[] data_array = new byte[1];
             data_array[0] = data;
             this.PRL2 = ByteToDoubleDecoding(data_array, resolution);
@@ -681,6 +683,7 @@ namespace OurClasses
                 data_int = ~(data - 1);
                 data_int *= -1;
             }
+            else { data_int = data; }
             this.PAM2 = data_int * resolution;
             return this.PAM2;
         }
@@ -696,7 +699,7 @@ namespace OurClasses
         }
         public double RPD2Decoding(byte data)
         {
-            double resolution = 1 / 256; // NM
+            double resolution = 1.0 / 256; // NM
             double data_int = 0;
             if ((data & 128) != 0)
             {
@@ -704,6 +707,7 @@ namespace OurClasses
                 data_int = ~(data - 1);
                 data_int *= -1;
             }
+            else { data_int = data; }
             this.RPD2 = data_int * resolution;
             return this.RPD2;
         }
@@ -724,9 +728,10 @@ namespace OurClasses
             if ((data & 128) != 0)
             {
                 // Hacemos la conversión de dos complementos para valores negativos
-                data_int = ~(data - 1);
+                data_int = (~data + 1) & 0x7F;
                 data_int *= -1;
             }
+            else { data_int = data; }
             this.APD2 = data_int * resolution;
             return this.APD2;
         }
@@ -734,24 +739,29 @@ namespace OurClasses
         public List<double> decode130(byte[] data)
         {
             List<double> decodedData = new List<double>();
-            int byteIndex = 0;
+            int byteIndex = 1;
+
+            byte resultado = 0;
+            for (int i = 0; i < 8; i++)
+            {
+                resultado |= (byte)(((data[0] >> i) & 0b00000001) << (7 - i));
+            }
+
             for (int i = 1; i < 8; i++)
             {
-                if (((data[0] >> i) & 0b00000001) == 1)
+                if (((resultado >> i-1) & 0b00000001) == 1)
                 {
-                    byteIndex += 1;
-
                     switch (i)
                     {
-                        case 1:
+                        case 7:
                             double APD = APD2Decoding(data[byteIndex]);
                             decodedData.Add(APD);
                             break;
-                        case 2:
+                        case 6:
                             double RPD = RPD2Decoding(data[byteIndex]);
                             decodedData.Add(RPD);
                             break;
-                        case 3:
+                        case 5:
                             double PAM = PAM2Decoding(data[byteIndex]);
                             decodedData.Add(PAM);
                             break;
@@ -759,19 +769,20 @@ namespace OurClasses
                             double PRL = PRL2Decoding(data[byteIndex]);
                             decodedData.Add(PRL);
                             break;
-                        case 5:
+                        case 3:
                             double SAM = SAM2Decoding(data[byteIndex]);
                             decodedData.Add(SAM);
                             break;
-                        case 6:
+                        case 2:
                             double SSR = SSR2Decoding(data[byteIndex]);
                             decodedData.Add(SSR);
                             break;
-                        case 7:
+                        case 1:
                             double SRL = SRL2Decoding(data[byteIndex]);
                             decodedData.Add(SRL);
                             break;
                     }
+                    byteIndex += 1;
                 }
             }
             return decodedData;
@@ -915,7 +926,8 @@ namespace OurClasses
             {
                 // Valor negativo
                 combinedValue = ((RA1 << 3) | RA2);
-                combinedValue = -(~combinedValue + 1);
+                combinedValue = ((~combinedValue)+1) & 0x1FF;
+                combinedValue *= -1;
             }
             double resolution = 45.0 / 256.0; //resolución en grados
             double RA = combinedValue * resolution;
@@ -944,7 +956,8 @@ namespace OurClasses
             {
                 // Valor negativo
                 combinedValue = ((TTA1 << 7) | TTA2);
-                combinedValue = -(~combinedValue + 1);
+                combinedValue = ((~combinedValue) + 1) & 0x3FF;
+                combinedValue *= -1;
             }
             double resolution = 90.0 / 512.0;
             double TTA = combinedValue * resolution;
@@ -993,9 +1006,10 @@ namespace OurClasses
             {
                 // Valor negativo
                 combinedValue = ((TAR1 << 5) | TAR2);
-                combinedValue = -(~combinedValue + 1);
+                combinedValue = ((~combinedValue) + 1) & 0x1FF;
+                combinedValue *= -1;
             }
-            double resolution = (double)(8 / 256); //resolución en grados/s
+            double resolution = (double)(8.0 / 256); //resolución en grados/s
             double TAR = combinedValue * resolution;
             this.TAR = TAR;
             return this.TAR;
@@ -1045,9 +1059,10 @@ namespace OurClasses
             {
                 // Valor negativo
                 combinedValue = ((HDG1 << 4) | HDG2);
-                combinedValue = -(~combinedValue + 1);
+                combinedValue = ((~combinedValue) + 1) & 0x3FF;
+                combinedValue *= -1;
             }
-            double resolution = (double)(90 / 512); //resolución en grados/s
+            double resolution = (double)(90.0 / 512); //resolución en grados/s
             double HDG = combinedValue * resolution;
             this.HDG = HDG;
             return this.HDG;
@@ -1086,7 +1101,7 @@ namespace OurClasses
 
             int combinedValue = (mach1 << 2) | mach2;
 
-            double resolution = 2048.0/512.0; // Resolución en kt
+            double resolution = 2.048/512.0; // Resolución en kt
             double mach = combinedValue * resolution;
             this.MACH = mach;
             return this.MACH;
@@ -1114,7 +1129,8 @@ namespace OurClasses
             {
                 // Valor negativo
                 combinedValue = ((BAR1 << 5) | BAR2);
-                combinedValue = -(~combinedValue + 1);
+                combinedValue = ((~combinedValue) + 1) & 0x1FF;
+                combinedValue *= -1;
             }
             double resolution = (double)(32.0); //resolución en ft/min
             double BAR = combinedValue * resolution;
@@ -1143,7 +1159,8 @@ namespace OurClasses
             {
                 // Valor negativo
                 combinedValue = ((IVV1 << 8) | IVV2);
-                combinedValue = -(~combinedValue + 1);
+                combinedValue = ((~combinedValue) + 1) & 0x1FF;
+                combinedValue *= -1;
             }
             double resolution = (double)(32.0); //resolución en ft/min
             double IVV = combinedValue * resolution;
@@ -1151,17 +1168,18 @@ namespace OurClasses
             return this.IVV;
         }
 
-        public List<object> decode250(byte[] data)
+        public List<object[]> decode250(byte[] data)
         {
             int REP = data[0];
             byte[] data_mode = new byte[8];
-            List<object> decodedData = new List<object>();
+            List<object[]> decodedDataList = new List<object[]>();
             for (int i = 0; i < REP; i++)
             {
                 Array.Copy(data, 8*i+1, data_mode, 0, 8);
                 int[] BDS_address = fullModeSDecoding(data_mode);
                 if (BDS_address[0] == 4 && BDS_address[1] == 0)
                 {
+                    object[] decodedData = new object[12];
                     int MPCStatus = MCPStatusDecoding(data_mode);
                     double MPCPalt = MCPaltDecoding(data_mode);
                     int FMstatus = FMstatusDecoding(data_mode);
@@ -1174,21 +1192,23 @@ namespace OurClasses
                     int App = AppDecoding(data_mode);
                     int targetalt_status = targetalt_statusDecoding(data_mode);
                     string targetalt_source = targetalt_sourceDecoding(data_mode);
-                    decodedData.Add(MPCStatus);
-                    decodedData.Add(MPCPalt);
-                    decodedData.Add(FMstatus);
-                    decodedData.Add(FMalt);
-                    decodedData.Add(BPstatus);
-                    decodedData.Add(BPpres);
-                    decodedData.Add(modeStat);
-                    decodedData.Add(VNAV);
-                    decodedData.Add(ALThold);
-                    decodedData.Add(App);
-                    decodedData.Add(targetalt_status);
-                    decodedData.Add(targetalt_source);
+                    decodedData[0] = MPCStatus;
+                    decodedData[1] = MPCPalt;
+                    decodedData[2] = FMstatus;
+                    decodedData[3] = FMalt;
+                    decodedData[4] = BPstatus;
+                    decodedData[5] = BPpres;
+                    decodedData[6] = modeStat;
+                    decodedData[7] = VNAV;
+                    decodedData[8] = ALThold;
+                    decodedData[9] = App;
+                    decodedData[10] = targetalt_status;
+                    decodedData[11] = targetalt_source;
+                    decodedDataList.Add(decodedData);
                 }
                 if (BDS_address[0] == 5 && BDS_address[1] == 0)
                 {
+                    object[] decodedData = new object[10];
                     int RAstatus = RAstatusDecoding(data_mode);
                     double RA = RADecoding(data_mode);
                     int TTAstatus = TTAstatusDecoding(data_mode);
@@ -1199,19 +1219,21 @@ namespace OurClasses
                     double TAR = TARDecoding(data_mode);
                     int TASstatus = TASstatusDecoding(data_mode);
                     double TAS = TASDecoding(data_mode);
-                    decodedData.Add(RAstatus);
-                    decodedData.Add(RA);
-                    decodedData.Add(TTAstatus);
-                    decodedData.Add(TTA);
-                    decodedData.Add(GSstatus);
-                    decodedData.Add(GS);
-                    decodedData.Add(TARstatus);
-                    decodedData.Add(TAR);
-                    decodedData.Add(TASstatus);
-                    decodedData.Add(TAS);
+                    decodedData[0] = RAstatus;
+                    decodedData[1] = RA;
+                    decodedData[2] = TTAstatus;
+                    decodedData[3] = TTA;
+                    decodedData[4] = GSstatus;
+                    decodedData[5] = GS;
+                    decodedData[6] = TARstatus;
+                    decodedData[7] = TAR;
+                    decodedData[8] = TASstatus;
+                    decodedData[9] = TAS;
+                    decodedDataList.Add(decodedData);
                 }
                 if (BDS_address[0] == 6 && BDS_address[1] == 0)
                 {
+                    object[] decodedData = new object[11];
                     int HDGstatus = HDGstatusDecoding(data_mode);
                     double HDG = HDGDecoding(data_mode);
                     int IASstatus = IASstatusDecoding(data_mode);
@@ -1222,18 +1244,21 @@ namespace OurClasses
                     double BAR = BARDecoding(data_mode);
                     int IVVstatus = IVVstatusDecoding(data_mode);
                     double IVV = IVVDecoding(data_mode);
-                    decodedData.Add(HDGstatus);
-                    decodedData.Add(HDG);
-                    decodedData.Add(IASstatus);
-                    decodedData.Add(MACHstatus);
-                    decodedData.Add(MACH);
-                    decodedData.Add(BARstatus);
-                    decodedData.Add(BAR);
-                    decodedData.Add(IVVstatus);
-                    decodedData.Add(IVV);
+                    decodedData[0] = HDGstatus;
+                    decodedData[1] = HDG;
+                    decodedData[2] = IASstatus;
+                    decodedData[3] = IAS;
+                    decodedData[4] = MACHstatus;
+                    decodedData[5] = MACH;
+                    decodedData[6] = BARstatus;
+                    decodedData[7] = BAR;
+                    decodedData[8] = IVVstatus;
+                    decodedData[9] = IVV;
+                    decodedData[10] = 0;
+                    decodedDataList.Add(decodedData);
                 }
             }
-            return decodedData;
+            return decodedDataList;
         }
 
         //---------------------------------------------------------------
@@ -1651,7 +1676,7 @@ namespace OurClasses
 
         // DECODE 240
         //----------------------------------------------------------------
-        public string[] decode240(byte[] data)
+        public string decode240(byte[] data)
         {
             string cadenabits = string.Join("", Array.ConvertAll(data, b => Convert.ToString(b, 2).PadLeft(8, '0')));
 
@@ -1808,7 +1833,8 @@ namespace OurClasses
                     aircraft_identification[i] = "9";
                 }
             }
-            return aircraft_identification;
+            string ai = string.Join("",aircraft_identification);
+            return ai;
         }
         //----------------------------------------------------------------
     }
